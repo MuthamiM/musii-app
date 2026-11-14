@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background glass gradient -->
+    <linearGradient id="glassBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242430" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#0e0e14" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <!-- Specular highlight stroke -->
+    <linearGradient id="specularBorder" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="35%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+
+    <!-- Glowing neon wave gradient -->
+    <linearGradient id="mNeon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff4767"/>
+      <stop offset="50%" stop-color="#ff6b4a"/>
+      <stop offset="100%" stop-color="#ff9933"/>
+    </linearGradient>
+
+    <!-- Glass gloss reflection -->
+    <linearGradient id="glossSheen" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Drop shadow -->
+    <filter id="glassShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.75"/>
+    </filter>
+  </defs>
+
+  <!-- Base Glass Squircle -->
+  <rect x="40" y="40" width="432" height="432" rx="112" fill="url(#glassBg)" filter="url(#glassShadow)"/>
+  <rect x="40" y="40" width="432" height="432" rx="112" fill="none" stroke="url(#specularBorder)" stroke-width="4"/>
+
+  <!-- Upper Glass Sheen Reflection -->
+  <path d="M42 152 C42 90, 90 42, 152 42 L360 42 C422 42, 470 90, 470 152 C470 180, 420 220, 256 220 C92 220, 42 180, 42 152 Z" fill="url(#glossSheen)"/>
+
+  <!-- Ambient Glow Behind M -->
+  <circle cx="256" cy="270" r="110" fill="#ff4767" opacity="0.2" filter="blur(35px)"/>
+
+  <!-- Musical Soundwave M Logo -->
+  <g filter="url(#neonGlow)">
+    <!-- Left bar of M -->
+    <line x1="168" y1="340" x2="168" y2="200" stroke="url(#mNeon)" stroke-width="26" stroke-linecap="round"/>
+    
+    <!-- Central wave peaks forming M -->
+    <path d="M168 200 L256 310 L344 200" fill="none" stroke="url(#mNeon)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Right bar of M -->
+    <line x1="344" y1="200" x2="344" y2="340" stroke="url(#mNeon)" stroke-width="26" stroke-linecap="round"/>
+
+    <!-- Subtle horizontal soundwave chords -->
+    <circle cx="256" cy="170" r="10" fill="#ff9933"/>
+    <circle cx="224" cy="170" r="6" fill="#ff6b4a"/>
+    <circle cx="288" cy="170" r="6" fill="#ff6b4a"/>
+  </g>
+</svg>

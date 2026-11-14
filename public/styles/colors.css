@@ -1,0 +1,35 @@
+/**
+ * BitChord Design System - Colors & Themes
+ * Matched to Reference Screenshot
+ */
+:root {
+  --bg-primary: #050508;
+  --bg-card: #121217;
+  --bg-surface: rgba(22, 22, 28, 0.72);
+  --bg-surface-elevated: rgba(30, 30, 40, 0.85);
+  --bg-modal: rgba(26, 26, 32, 0.94);
+  
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --line-highlight: rgba(255, 255, 255, 0.28);
+  
+  --text-main: #f5f5f7;
+  --text-secondary: rgba(255, 255, 255, 0.72);
+  --text-muted: #8a8a98;
+  --text-dim: #545462;
+  
+  --accent: #ff4767;
+  --accent2: #ff8533;
+  --accent-gold: #f59e0b;
+  --accent-cyan: #06b6d4;
+  --accent-glow: rgba(255, 71, 103, 0.35);
+  
+  /* Gradients from screenshot */
+  --grad-coral-heart: linear-gradient(135deg, #e63946 0%, #a81326 100%);
+  --grad-chevron: linear-gradient(135deg, #e8508f 0%, #ee7a2b 100%);
+  --grad-coldplay: linear-gradient(145deg, #f59e0b 0%, #b45309 100%);
+  --grad-fire: linear-gradient(135deg, #ff416c 0%, #ff4b2b 50%, #ff8533 100%);
+  
+  color-scheme: dark;
+}
+

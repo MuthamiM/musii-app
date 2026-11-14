@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#050508">
+<title>BitChord — Minimal Glass Music</title>
+<style>
+:root {
+  --bg-primary: #050508;
+  --bg-card: #121217;
+  --bg-surface: rgba(22, 22, 28, 0.72);
+  --bg-surface-elevated: rgba(30, 30, 40, 0.85);
+  --bg-modal: rgba(26, 26, 32, 0.94);
+  
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --line-highlight: rgba(255, 255, 255, 0.28);
+  
+  --text-main: #f5f5f7;
+  --text-secondary: rgba(255, 255, 255, 0.72);
+  --text-muted: #8a8a98;
+  --text-dim: #545462;
+  
+  --accent: #ff4767;
+  --accent2: #ff8533;
+  --accent-gold: #f59e0b;
+  --accent-cyan: #06b6d4;
+  --accent-glow: rgba(255, 71, 103, 0.35);
+  
+  --grad-coral-heart: linear-gradient(135deg, #e63946 0%, #a81326 100%);
+  --grad-chevron: linear-gradient(135deg, #e8508f 0%, #ee7a2b 100%);
+  --grad-coldplay: linear-gradient(145deg, #f59e0b 0%, #b45309 100%);
+  --grad-fire: linear-gradient(135deg, #ff416c 0%, #ff4b2b 50%, #ff8533 100%);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(230, 57, 70, 0.14) 0%, transparent 55%),
+    radial-gradient(circle at 85% 30%, rgba(238, 122, 43, 0.08) 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  outline: none;
+  touch-action: manipulation;
+}
+
+svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glass-glow-orb {
+  position: fixed;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+  transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-viewport {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+  padding: max(env(safe-area-inset-top), 22px) 20px calc(190px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 480px) {
+  body { background-color: #000; }
+  .app-viewport {
+    background: var(--bg-primary);
+    border-inline: 1px solid var(--line);
+    box-shadow: 0 0 100px rgba(0, 0, 0, 0.9);
+  }
+}
+
+.view-section { display: none; }
+.view-section.active {
+  display: block;
+  animation: fadeInScale 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+h2.section-header {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin: 26px 0 14px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+h2.section-header:first-of-type { margin-top: 6px; }
+
+/* Picks Row */
+.picks-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 20px;
+  scrollbar-width: none;
+  margin-inline: -20px;
+  padding-inline: 20px;
+  padding-bottom: 8px;
+}
+.picks-row::-webkit-scrollbar { display: none; }
+
+.music-card {
+  flex: 0 0 68%;
+  max-width: 275px;
+  aspect-ratio: 3 / 4;
+  padding: 22px;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--card-grad, var(--grad-coral-heart));
+  scroll-snap-align: start;
+  cursor: pointer;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.music-card:active { transform: scale(0.96); }
+
+.card-decor-heart {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 120px;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.card-top-action {
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 2;
+}
+.card-top-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+}
+
+.card-bottom-info { position: relative; z-index: 2; }
+.card-tag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 4px;
+  display: block;
+}
+.card-title {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+.card-subtitle { font-size: 13px; opacity: 0.82; }
+
+/* Track Row */
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: all 0.16s ease;
+}
+.track-row:hover, .track-row:active {
+  background: var(--bg-surface);
+  border-color: var(--line-strong);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transform: scale(0.985);
+}
+.track-row.now-playing {
+  background: rgba(230, 57, 70, 0.12);
+  border-color: rgba(230, 57, 70, 0.35);
+}
+.track-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--card-grad, var(--grad-fire));
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+.track-meta { flex: 1; min-width: 0; }
+.track-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-row.now-playing .track-name { color: var(--accent); }
+.track-artist {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.track-eq {
+  display: none;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 15px;
+  width: 18px;
+}
+.track-row.now-playing.is-playing .track-eq { display: flex; }
+.track-row.now-playing.is-playing .track-btn-play { display: none; }
+.track-eq-bar {
+  width: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+}
+.track-eq-bar:nth-child(1) { height: 50%; animation-delay: 0.1s; }
+.track-eq-bar:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+.track-eq-bar:nth-child(3) { height: 35%; animation-delay: 0.2s; }
+@keyframes eqBounce {
+  0% { height: 25%; }
+  100% { height: 100%; }
+}
+
+/* Floating Mini Player */
+.floating-mini-player {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(404px, calc(100% - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(22, 22, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.75), inset 0 1px 1px 0 rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  z-index: 90;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.floating-mini-player:active { transform: translateX(-50%) scale(0.98); }
+.mini-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--card-grad, var(--grad-coral-heart));
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  animation: discSpin 14s linear infinite paused;
+}
+.floating-mini-player.is-playing .mini-thumb { animation-play-state: running; }
+@keyframes discSpin { 100% { transform: rotate(360deg); } }
+
+.mini-details { flex: 1; min-width: 0; }
+.mini-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-artist-info {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.mini-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--grad-fire);
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: transform 0.14s ease;
+}
+.mini-play-btn:active { transform: scale(0.9); }
+.mini-play-btn svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+
+/* Centered Bottom Nav Island + Floating Search Button */
+.nav-island-wrapper {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(350px, calc(100% - 32px));
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bottom-pill-bar {
+  flex: 1;
+  position: relative;
+  display: flex;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(22, 22, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+}
+.nav-sliding-pill {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px) / 3);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+.nav-tab-btn {
+  position: relative;
+  flex: 1;
+  height: 52px;
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: color 0.18s, transform 0.14s;
+  z-index: 2;
+}
+.nav-tab-btn:active { transform: scale(0.92); }
+.nav-tab-btn.is-active { color: #fff; }
+.nav-tab-btn.is-active svg { color: var(--accent); transform: translateY(-1px); }
+
+.floating-search-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(22, 22, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.28);
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(28px);
+  flex-shrink: 0;
+  transition: transform 0.14s, color 0.18s;
+}
+.floating-search-btn:active { transform: scale(0.9); color: #fff; }
+
+/* Modal Matching Screenshot */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+.modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
+.update-dialog {
+  width: 100%;
+  max-width: 350px;
+  border-radius: 28px;
+  background: rgba(28, 28, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.88), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(32px);
+  padding: 24px 22px 20px;
+  transform: scale(0.92) translateY(8px);
+  transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-backdrop.is-open .update-dialog { transform: scale(1) translateY(0); }
+.update-dialog-header { text-align: center; margin-bottom: 18px; }
+.update-dialog-header h3 { font-size: 19px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.update-dialog-header p { font-size: 13px; color: var(--text-muted); }
+
+.preview-showcase {
+  width: 100%;
+  height: 165px;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 60%, #523b12 0%, #1e1507 65%, #0d0a04 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 12px;
+  padding: 12px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+.showcase-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.showcase-phone-mockup {
+  width: 130px;
+  height: 120px;
+  margin: 4px auto 0;
+  border-radius: 14px 14px 0 0;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+}
+.mockup-header { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+.mockup-badge { width: 8px; height: 8px; border-radius: 50%; background: #eab308; }
+.mockup-title { font-size: 8px; font-weight: 600; color: #fff; }
+.mockup-lyrics { font-size: 8px; line-height: 1.35; color: #fef08a; font-weight: 500; }
+.mockup-lyrics span { display: block; }
+.mockup-lyrics .dimmed { opacity: 0.6; }
+
+.update-meta-block h4 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.update-meta-block p { font-size: 13px; color: rgba(255, 255, 255, 0.75); line-height: 1.4; margin-bottom: 4px; }
+.update-changelog-link { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.85); cursor: pointer; }
+
+.modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+.btn-modal-primary {
+  width: 100%;
+  padding: 13px;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  transition: transform 0.14s ease;
+}
+.btn-modal-primary:active { transform: scale(0.97); }
+.btn-modal-secondary {
+  width: 100%;
+  padding: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* System Toast Pill */
+.system-toast-pill {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(156px + env(safe-area-inset-bottom));
+  width: min(390px, calc(100% - 36px));
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(35, 35, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #f1f1f5;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 80;
+  cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.system-toast-pill.dismissed {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  pointer-events: none;
+}
+
+/* Fullscreen Glass Player Sheet */
+.fullscreen-player-sheet {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 12, 0.95);
+  -webkit-backdrop-filter: blur(40px) saturate(190%);
+  backdrop-filter: blur(40px) saturate(190%);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top), 24px) 24px max(env(safe-area-inset-bottom), 32px);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fullscreen-player-sheet.is-open { transform: translateY(0); }
+.sheet-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.sheet-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  transition: transform 0.14s ease;
+}
+.sheet-icon-btn:active { transform: scale(0.9); }
+.sheet-cover-container {
+  width: 100%;
+  max-width: 310px;
+  aspect-ratio: 1;
+  margin: 0 auto 28px;
+  border-radius: 32px;
+  background: var(--card-grad, var(--grad-coral-heart));
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.85), inset 0 2px 2px rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sheet-meta-info { text-align: center; margin-bottom: 20px; }
+.sheet-title { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; color: #fff; }
+.sheet-artist { font-size: 15px; color: var(--text-muted); margin-top: 3px; }
+
+.lyrics-glass-card {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  text-align: center;
+  backdrop-filter: blur(16px);
+}
+.lyrics-text { font-size: 13.5px; font-weight: 500; line-height: 1.5; color: #fef08a; }
+
+.scrubber-container { width: 100%; margin-bottom: 24px; }
+.scrubber-track { width: 100%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); position: relative; cursor: pointer; }
+.scrubber-fill { height: 100%; border-radius: 3px; background: var(--grad-fire); width: 30%; position: relative; }
+.scrubber-thumb { position: absolute; right: -6px; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.scrubber-timestamps { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+.transport-controls { display: flex; align-items: center; justify-content: space-evenly; margin-top: auto; }
+.transport-btn-skip {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  transition: transform 0.14s ease;
+}
+.transport-btn-skip:active { transform: scale(0.9); }
+.transport-btn-main {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--grad-fire);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: 0 10px 30px var(--accent-glow);
+  transition: transform 0.14s ease;
+}
+.transport-btn-main:active { transform: scale(0.92); }
+.transport-btn-main svg { width: 32px; height: 32px; fill: currentColor; stroke: none; }
+</style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Colored Glow Orb -->
+  <div class="glass-glow-orb" id="ambientBackdropOrb" style="background: linear-gradient(135deg, #e63946, #ee7a2b); top: -80px; left: 50%; transform: translateX(-50%);"></div>
+
+  <!-- Main Viewport Container -->
+  <main class="app-viewport">
+    
+    <!-- Top Header Bar -->
+    <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 22px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:34px; height:34px; border-radius:10px; background:var(--grad-fire); display:grid; place-items:center; box-shadow:0 4px 16px var(--accent-glow);">
+          <svg viewBox="0 0 24 24" style="stroke:#fff; width:20px; height:20px;"><path d="M4 8h16M4 12h16M4 16h16"/></svg>
+        </div>
+        <span style="font-size:21px; font-weight:700; letter-spacing:-0.5px; color:#fff;">BitChord</span>
+      </div>
+
+      <button id="btnHeaderUpdatePill" style="display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background:rgba(230,57,70,0.12); border:1px solid rgba(230,57,70,0.35); color:var(--accent); font-size:11.5px; font-weight:600;">
+        <span style="width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent);"></span>
+        v1.9.1 Hotfix
+      </button>
+    </header>
+
+    <!-- VIEW 1: HOME VIEW -->
+    <section class="view-section active" id="view-home">
+      <h2 class="section-header">
+        Top Picks for You
+        <span style="font-size:13px; font-weight:500; color:var(--accent); cursor:pointer;">See all</span>
+      </h2>
+      <div class="picks-row" id="topPicksScroller"></div>
+
+      <h2 class="section-header" style="margin-top:28px;">
+        Recently Played
+        <span style="font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer;">History</span>
+      </h2>
+      <div style="display:flex; flex-direction:column; gap:8px;" id="recentTracksList"></div>
+    </section>
+
+    <!-- VIEW 2: PLAYLIST VIEW -->
+    <section class="view-section" id="view-playlist">
+      <h2 class="section-header">Your Playlists</h2>
+      <button id="btnCreatePlaylist" style="width:100%; padding:15px; margin-bottom:16px; border-radius:18px; background:var(--bg-surface); border:1px dashed rgba(255,255,255,0.25); color:#fff; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px; backdrop-filter:blur(20px);">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        + Create New Playlist
+      </button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" id="playlistCardsGrid"></div>
+    </section>
+
+    <!-- VIEW 3: PROFILE VIEW -->
+    <section class="view-section" id="view-profile">
+      <div style="text-align:center; margin-top:8px;">
+        <div style="width:92px; height:92px; margin:0 auto 14px; border-radius:50%; background:linear-gradient(135deg, #1f1f2e, #111118); border:2px solid rgba(255,255,255,0.22); display:grid; place-items:center; font-size:30px; font-weight:700; color:#fff; box-shadow:0 12px 30px rgba(0,0,0,0.5);">
+          WN
+        </div>
+        <h1 style="font-size:24px; font-weight:700; letter-spacing:-0.4px;">Wakadinali Fan</h1>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:2px;">@bitchord_user • Hi-Fi Audiophile</p>
+      </div>
+
+      <div style="display:flex; margin:24px 0; padding:16px 0; border-radius:18px; background:var(--bg-surface); border:1px solid var(--line-strong); text-align:center; backdrop-filter:blur(20px);">
+        <div style="flex:1;">
+          <b style="display:block; font-size:22px; font-weight:700;">18</b>
+          <span style="font-size:12px; color:var(--text-muted);">Playlists</span>
+        </div>
+        <div style="flex:1; border-left:1px solid var(--line-strong);">
+          <b style="display:block; font-size:22px; font-weight:700;">342</b>
+          <span style="font-size:12px; color:var(--text-muted);">Following</span>
+        </div>
+        <div style="flex:1; border-left:1px solid var(--line-strong);">
+          <b style="display:block; font-size:22px; font-weight:700;">5.8k</b>
+          <span style="font-size:12px; color:var(--text-muted);">Plays</span>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-surface); border-radius:18px; border:1px solid var(--line-strong); overflow:hidden; backdrop-filter:blur(20px);">
+        <button id="btnToggleHaptics" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <span>Haptic Feedback Engine</span>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(230,57,70,0.18); color:var(--accent); font-weight:600;" id="tagHapticStatus">Active</span>
+        </button>
+        <button id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <span>Software Update</span>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(245,158,11,0.18); color:var(--accent-gold); font-weight:600;">v1.9.1 Ready</span>
+        </button>
+        <button style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <span>Audio Engine (better-sqlite3 DSP)</span>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.1); color:var(--text-muted); font-weight:600;">24-bit 96kHz</span>
+        </button>
+        <button style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; color:var(--accent);">
+          <span>Sign Out</span>
+          <svg viewBox="0 0 24 24" style="stroke:currentColor; width:18px; height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- System Notification Toast (Pixel-Perfect from Screenshot) -->
+  <div class="system-toast-pill" id="systemToastPill">
+    Connected for charging only. Tap the USB notification to use USB for transferring files.
+  </div>
+
+  <!-- Floating Mini Player -->
+  <div class="floating-mini-player" id="floatingMiniPlayer">
+    <div class="mini-thumb" id="miniDiscThumb" style="--card-grad: var(--grad-coral-heart);">
+      <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:#fff;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+    <div class="mini-details">
+      <b class="mini-name" id="miniTrackName">Ume Tabasamu</b>
+      <span class="mini-artist-info" id="miniTrackArtist">Wakadinali • Victims of Madness</span>
+    </div>
+    <div class="mini-actions">
+      <button class="mini-play-btn" id="btnMiniPlayPause" aria-label="Play / Pause">
+        <svg viewBox="0 0 24 24" id="iconMiniPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Centered Bottom Nav Island + Floating Search Button (Matching Screenshot) -->
+  <div class="nav-island-wrapper">
+    <nav class="bottom-pill-bar">
+      <div class="nav-sliding-pill" id="navPillIndicator"></div>
+      
+      <button class="nav-tab-btn is-active" data-tab="home" data-idx="0">
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/></svg>
+        Home
+      </button>
+
+      <button class="nav-tab-btn" data-tab="playlist" data-idx="1">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        Playlist
+      </button>
+
+      <button class="nav-tab-btn" data-tab="profile" data-idx="2">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="7" cy="6" r="1.5"/><circle cx="17" cy="12" r="1.5"/><circle cx="10" cy="18" r="1.5"/></svg>
+        Profile
+      </button>
+    </nav>
+
+    <button class="floating-search-btn" id="btnQuickSearch" aria-label="Search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>
+
+  <!-- PIXEL-PERFECT SOFTWARE UPDATE MODAL (Direct Recreation of Screenshot) -->
+  <div class="modal-backdrop" id="softwareUpdateModal">
+    <div class="update-dialog">
+      <div class="update-dialog-header">
+        <h3>Software Update</h3>
+        <p>bitchord 1.9.1 is available to download.</p>
+      </div>
+
+      <div class="update-whats-new">
+        <div class="whats-new-title">What's new</div>
+        
+        <div class="preview-showcase">
+          <div class="showcase-brand">
+            <svg viewBox="0 0 24 24" style="width:14px; height:14px; stroke:#fff;"><path d="M4 8h16M4 12h16M4 16h16"/></svg>
+            BitChord
+          </div>
+
+          <div class="showcase-phone-mockup">
+            <div class="mockup-header">
+              <span class="mockup-badge"></span>
+              <span class="mockup-title">WM+ • Coldplay</span>
+            </div>
+            <div class="mockup-lyrics">
+              <span>Look how they shine</span>
+              <span>for you</span>
+              <span class="dimmed">And everything you do</span>
+              <span>Yeah, they were all</span>
+              <span>yellow</span>
+              <span class="dimmed">I came along</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="update-meta-block">
+          <h4>Hotfix</h4>
+          <p>A small hotfix release on top of v1.9.</p>
+          <span class="update-changelog-link" id="btnViewChangelog">Changelog</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal-primary" id="btnModalDownload">Download Now</button>
+        <button class="btn-modal-secondary" id="btnModalRemind">Remind Me Later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN GLASS PLAYER SHEET -->
+  <div class="fullscreen-player-sheet" id="fullscreenPlayerSheet">
+    <div class="sheet-top-bar">
+      <button class="sheet-icon-btn" id="btnClosePlayerSheet">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <span style="font-size:13px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted)">Now Playing</span>
+      <button class="sheet-icon-btn" id="btnSheetFavorite">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </button>
+    </div>
+
+    <div class="sheet-cover-container" id="sheetCoverArt" style="--card-grad: var(--grad-coral-heart);">
+      <svg viewBox="0 0 24 24" style="width:72px; height:72px; stroke:#fff;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+
+    <div class="sheet-meta-info">
+      <h1 class="sheet-title" id="sheetTrackTitle">Ume Tabasamu</h1>
+      <p class="sheet-artist" id="sheetTrackArtist">Wakadinali</p>
+    </div>
+
+    <div class="lyrics-glass-card">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.5); margin-bottom:4px;">Lyrics Highlight</div>
+      <div class="lyrics-text" id="sheetLyricsText">"Looking at the city lights glowing through the dark skyline"</div>
+    </div>
+
+    <div class="scrubber-container">
+      <div class="scrubber-track" id="sheetScrubberTrack">
+        <div class="scrubber-fill" id="sheetScrubberFill">
+          <div class="scrubber-thumb"></div>
+        </div>
+      </div>
+      <div class="scrubber-timestamps">
+        <span id="sheetCurrentTime">0:00</span>
+        <span id="sheetTotalTime">3:34</span>
+      </div>
+    </div>
+
+    <div class="transport-controls">
+      <button class="transport-btn-skip" id="btnSheetPrev" aria-label="Previous">
+        <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+      </button>
+      <button class="transport-btn-main" id="btnSheetPlayPause" aria-label="Play / Pause">
+        <svg viewBox="0 0 24 24" id="iconSheetPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
+      </button>
+      <button class="transport-btn-skip" id="btnSheetNext" aria-label="Next">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="toastNotification" style="position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-20px); background:rgba(30,30,38,0.95); border:1px solid rgba(255,71,103,0.4); border-radius:999px; padding:10px 18px; font-size:13px; font-weight:600; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,0.8); z-index:9999; opacity:0; pointer-events:none; transition:all 0.25s ease;"></div>
+
+<script>
+// --- EMBEDDED DATA & SYNTHESIZER ENGINE ---
+const GRADIENTS = [
+  'linear-gradient(135deg, #e63946 0%, #a81326 100%)',
+  'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+  'linear-gradient(135deg, #e8508f 0%, #ee7a2b 100%)',
+  'linear-gradient(135deg, #5b6cff 0%, #2a2f9e 100%)',
+  'linear-gradient(135deg, #16a58c 0%, #0a5e5a 100%)'
+];
+
+let TRACKS = [
+  { id: 1, title: 'Ume Tabasamu', artist: 'Wakadinali', album: 'Victims of Madness', duration: 214, rootFreq: 220, gradient: GRADIENTS[0], lyricsSnippet: 'Looking at the city lights glowing through the dark skyline' },
+  { id: 2, title: 'Yellow', artist: 'Coldplay', album: 'Parachutes', duration: 269, rootFreq: 261.63, gradient: GRADIENTS[1], lyricsSnippet: 'Look how they shine for you / And everything you do / Yeah, they were all yellow' },
+  { id: 3, title: 'Midnight Run', artist: 'Nova Lane', album: 'Late Night Drive', duration: 198, rootFreq: 196, gradient: GRADIENTS[2], lyricsSnippet: 'Cruising down empty highways beneath neon raindrops' },
+  { id: 4, title: 'Deep Work', artist: 'Kito', album: 'Focus Flow', duration: 245, rootFreq: 174.61, gradient: GRADIENTS[3], lyricsSnippet: 'Binaural harmonic waves for intense deep creative flow' },
+  { id: 5, title: 'Neon Rain', artist: 'Static Bloom', album: 'Cyber Horizon', duration: 210, rootFreq: 293.66, gradient: GRADIENTS[4], lyricsSnippet: 'Reflections dancing on the wet asphalt in the midnight fog' }
+];
+
+let PICKS = [
+  { id: 'pick-1', category: 'Mood Mix', title: 'Heart Break Melodies', subtitle: 'Late Night Drive • 24 songs', trackId: 1, gradient: GRADIENTS[0] },
+  { id: 'pick-2', category: 'Top Picks for You', title: 'Golden Sunset Vibes', subtitle: 'Coldplay & Friends • 36 songs', trackId: 2, gradient: GRADIENTS[2] },
+  { id: 'pick-3', category: 'Focus', title: 'Deep Work Binaural', subtitle: 'Zero Distraction • 40 songs', trackId: 4, gradient: GRADIENTS[3] }
+];
+
+let PLAYLISTS = [
+  { id: 'pl-1', name: 'Liked Songs', song_count: 128, gradient: GRADIENTS[0] },
+  { id: 'pl-2', name: 'Road Trip Highs', song_count: 36, gradient: GRADIENTS[1] },
+  { id: 'pl-3', name: 'Deep Focus Studio', song_count: 52, gradient: GRADIENTS[3] },
+  { id: 'pl-4', name: 'Midnight Melancholy', song_count: 21, gradient: GRADIENTS[2] }
+];
+
+// --- HAPTICS & AUDIO FEEDBACK ---
+let hapticsActive = true;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function triggerHaptic(type = 'light') {
+  if (!hapticsActive) return;
+  if (navigator.vibrate) {
+    if (type === 'heavy') navigator.vibrate([24, 30, 24]);
+    else if (type === 'medium') navigator.vibrate(18);
+    else navigator.vibrate(10);
+  }
+  if (audioCtx && audioCtx.state === 'running') {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(type === 'heavy' ? 440 : type === 'medium' ? 880 : 1320, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.02);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.022);
+    } catch(e){}
+  }
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toastNotification');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  el.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(-50%) translateY(-20px)';
+  }, 2800);
+}
+
+// --- SYNTHESIZER ---
+let synthNodes = null;
+let synthTimer = null;
+
+function startSynth(track) {
+  initAudio();
+  stopSynth();
+  const now = audioCtx.currentTime;
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(0.01, now);
+  master.gain.exponentialRampToValueAtTime(0.2, now + 1.2);
+  master.connect(audioCtx.destination);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(780, now);
+  filter.Q.setValueAtTime(2.2, now);
+  filter.connect(master);
+
+  const baseF = track.rootFreq || 220;
+  const chords = [
+    [baseF, baseF * 1.25, baseF * 1.5],
+    [baseF * 0.89, baseF * 1.12, baseF * 1.33],
+    [baseF * 0.75, baseF * 0.94, baseF * 1.12],
+    [baseF * 1.33, baseF * 1.66, baseF * 2.0]
+  ];
+
+  const oscs = [audioCtx.createOscillator(), audioCtx.createOscillator(), audioCtx.createOscillator()];
+  oscs.forEach((osc, i) => {
+    osc.type = i === 1 ? 'sawtooth' : 'triangle';
+    osc.frequency.setValueAtTime(chords[0][i], now);
+    osc.connect(filter);
+    osc.start();
+  });
+
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.frequency.setValueAtTime(0.35, now);
+  lfoGain.gain.setValueAtTime(120, now);
+  lfo.connect(filter.frequency);
+  lfo.start();
+
+  let step = 0;
+  synthTimer = setInterval(() => {
+    if (!audioCtx || !isPlaying) return;
+    step = (step + 1) % chords.length;
+    const c = chords[step];
+    const ct = audioCtx.currentTime;
+    oscs[0].frequency.setTargetAtTime(c[0], ct, 0.4);
+    oscs[1].frequency.setTargetAtTime(c[1], ct, 0.4);
+    oscs[2].frequency.setTargetAtTime(c[2], ct, 0.4);
+  }, 4200);
+
+  synthNodes = { oscs, lfo, master };
+}
+
+function stopSynth() {
+  if (synthTimer) { clearInterval(synthTimer); synthTimer = null; }
+  if (synthNodes && audioCtx) {
+    try {
+      const ct = audioCtx.currentTime;
+      synthNodes.master.gain.setValueAtTime(synthNodes.master.gain.value, ct);
+      synthNodes.master.gain.exponentialRampToValueAtTime(0.0001, ct + 0.25);
+      setTimeout(() => {
+        if (synthNodes) {
+          synthNodes.oscs.forEach(o => { try{o.stop(); o.disconnect();}catch(e){} });
+          try{synthNodes.lfo.stop(); synthNodes.lfo.disconnect();}catch(e){}
+          synthNodes = null;
+        }
+      }, 300);
+    } catch(e){ synthNodes = null; }
+  }
+}
+
+// --- PLAYER STATE ---
+let currentTrackIdx = 0;
+let isPlaying = false;
+let currentSeconds = 0;
+let playbackTicker = null;
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+const PLAY_SVG = '<polygon points="8 5 19 12 8 19 8 5"></polygon>';
+const PAUSE_SVG = '<rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect>';
+
+function updatePlayerUI() {
+  const track = TRACKS[currentTrackIdx];
+  document.getElementById('miniTrackName').textContent = track.title;
+  document.getElementById('miniTrackArtist').textContent = `${track.artist} • ${track.album}`;
+  document.getElementById('miniDiscThumb').style.setProperty('--card-grad', track.gradient);
+  document.getElementById('floatingMiniPlayer').classList.toggle('is-playing', isPlaying);
+
+  document.getElementById('iconMiniPlayPause').innerHTML = isPlaying ? PAUSE_SVG : PLAY_SVG;
+  document.getElementById('iconSheetPlayPause').innerHTML = isPlaying ? PAUSE_SVG : PLAY_SVG;
+
+  document.getElementById('ambientBackdropOrb').style.background = track.gradient;
+
+  document.getElementById('sheetTrackTitle').textContent = track.title;
+  document.getElementById('sheetTrackArtist').textContent = track.artist;
+  document.getElementById('sheetCoverArt').style.setProperty('--card-grad', track.gradient);
+  document.getElementById('sheetTotalTime').textContent = formatTime(track.duration);
+  document.getElementById('sheetLyricsText').textContent = `"${track.lyricsSnippet || 'Looking at the city lights'}"`;
+
+  document.querySelectorAll('.track-row').forEach((row, idx) => {
+    const isThis = idx === currentTrackIdx;
+    row.classList.toggle('now-playing', isThis);
+    row.classList.toggle('is-playing', isThis && isPlaying);
+  });
+}
+
+function updateProgress() {
+  const track = TRACKS[currentTrackIdx];
+  const pct = Math.min(100, (currentSeconds / track.duration) * 100);
+  document.getElementById('sheetScrubberFill').style.width = pct + '%';
+  document.getElementById('sheetCurrentTime').textContent = formatTime(currentSeconds);
+}
+
+function playTrack(idx, autoPlay = true) {
+  currentTrackIdx = (idx + TRACKS.length) % TRACKS.length;
+  currentSeconds = 0;
+  updateProgress();
+  if (autoPlay) {
+    initAudio();
+    isPlaying = true;
+    startSynth(TRACKS[currentTrackIdx]);
+    if (playbackTicker) clearInterval(playbackTicker);
+    playbackTicker = setInterval(() => {
+      currentSeconds++;
+      if (currentSeconds >= TRACKS[currentTrackIdx].duration) {
+        playTrack(currentTrackIdx + 1, true);
+      } else {
+        updateProgress();
+      }
+    }, 1000);
+  } else {
+    isPlaying = false;
+    stopSynth();
+    if (playbackTicker) clearInterval(playbackTicker);
+  }
+  updatePlayerUI();
+}
+
+function togglePlay() {
+  triggerHaptic('medium');
+  if (isPlaying) {
+    isPlaying = false;
+    stopSynth();
+    if (playbackTicker) clearInterval(playbackTicker);
+    updatePlayerUI();
+  } else {
+    playTrack(currentTrackIdx, true);
+  }
+}
+
+// --- RENDER VIEWS ---
+function renderHome() {
+  const scroller = document.getElementById('topPicksScroller');
+  scroller.innerHTML = PICKS.map(p => `
+    <div class="music-card" style="--card-grad:${p.gradient}" data-track-id="${p.trackId}">
+      <svg class="card-decor-heart" viewBox="0 0 100 90" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="4 4">
+        <path d="M50 80 C20 55, 5 35, 15 18 C25 2, 45 8, 50 25 C55 8, 75 2, 85 18 C95 35, 80 55, 50 80 Z"/>
+      </svg>
+      <div class="card-top-action">
+        <div class="card-top-icon">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff"><path d="M2 12h2M6 8v8M10 5v14M14 9v6M18 11v2M22 12h-2"/></svg>
+        </div>
+      </div>
+      <div class="card-bottom-info">
+        <span class="card-tag">${p.category}</span>
+        <b class="card-title">${p.title}</b>
+        <span class="card-subtitle">${p.subtitle}</span>
+      </div>
+    </div>
+  `).join('');
+
+  const list = document.getElementById('recentTracksList');
+  list.innerHTML = TRACKS.map((t, i) => `
+    <div class="track-row ${i === 0 ? 'now-playing' : ''}" data-idx="${i}">
+      <div class="track-avatar" style="--card-grad:${t.gradient}">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <div class="track-meta">
+        <span class="track-name">${t.title}</span>
+        <span class="track-artist">${t.artist} • ${t.album}</span>
+      </div>
+      <div class="track-eq">
+        <div class="track-eq-bar"></div>
+        <div class="track-eq-bar"></div>
+        <div class="track-eq-bar"></div>
+      </div>
+      <div class="track-btn-play">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text-muted)"><polygon points="8 5 19 12 8 19 8 5" fill="currentColor" stroke="none"></polygon></svg>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPlaylists() {
+  const grid = document.getElementById('playlistCardsGrid');
+  grid.innerHTML = PLAYLISTS.map(pl => `
+    <div class="playlist-card" style="padding:14px; border-radius:20px; background:var(--bg-surface); border:1px solid var(--line-strong); box-shadow:inset 0 1px 1px rgba(255,255,255,0.18); backdrop-filter:blur(20px);">
+      <div style="width:100%; aspect-ratio:1; border-radius:14px; background:${pl.gradient}; margin-bottom:10px; display:grid; place-items:center;">
+        <svg viewBox="0 0 24 24" style="width:28px; height:28px; stroke:#fff"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <b style="display:block; font-size:14px; font-weight:600;">${pl.name}</b>
+      <span style="font-size:12px; color:var(--text-muted);">${pl.song_count} tracks</span>
+    </div>
+  `).join('');
+}
+
+// --- SETUP & EVENT HANDLERS ---
+document.addEventListener('DOMContentLoaded', async () => {
+  renderHome();
+  renderPlaylists();
+  updatePlayerUI();
+
+  // Try fetching SQLite backend if online
+  if (window.location.protocol.startsWith('http')) {
+    try {
+      const res = await fetch('/api/music/feed');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.allTracks) {
+          TRACKS = json.data.allTracks;
+          PICKS = json.data.picks || PICKS;
+          renderHome();
+          updatePlayerUI();
+        }
+      }
+    } catch(e){}
+  }
+
+  // Navigation tabs
+  const tabs = document.querySelectorAll('.nav-tab-btn');
+  const indicator = document.getElementById('navPillIndicator');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      triggerHaptic('light');
+      const target = tab.dataset.tab;
+      const idx = parseInt(tab.dataset.idx, 10);
+      indicator.style.transform = `translateX(${idx * 100}%)`;
+      tabs.forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+
+      document.querySelectorAll('.view-section').forEach(sec => {
+        sec.classList.toggle('active', sec.id === `view-${target}`);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Track select
+  document.getElementById('recentTracksList').addEventListener('click', e => {
+    const row = e.target.closest('.track-row');
+    if (row) {
+      triggerHaptic('medium');
+      const idx = parseInt(row.dataset.idx, 10);
+      if (idx === currentTrackIdx && isPlaying) {
+        togglePlay();
+      } else {
+        playTrack(idx, true);
+      }
+    }
+  });
+
+  document.getElementById('topPicksScroller').addEventListener('click', e => {
+    const card = e.target.closest('.music-card');
+    if (card) {
+      triggerHaptic('medium');
+      const tid = parseInt(card.dataset.trackId, 10);
+      const idx = TRACKS.findIndex(t => t.id === tid);
+      playTrack(idx >= 0 ? idx : 0, true);
+    }
+  });
+
+  // Transport
+  document.getElementById('btnMiniPlayPause').addEventListener('click', e => {
+    e.stopPropagation();
+    togglePlay();
+  });
+  document.getElementById('btnSheetPlayPause').addEventListener('click', () => togglePlay());
+  document.getElementById('btnSheetNext').addEventListener('click', () => {
+    triggerHaptic('medium');
+    playTrack(currentTrackIdx + 1, true);
+  });
+  document.getElementById('btnSheetPrev').addEventListener('click', () => {
+    triggerHaptic('medium');
+    playTrack(currentTrackIdx - 1, true);
+  });
+
+  // Scrubber
+  const scrubber = document.getElementById('sheetScrubberTrack');
+  scrubber.addEventListener('click', e => {
+    triggerHaptic('light');
+    const rect = scrubber.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    currentSeconds = Math.floor(ratio * TRACKS[currentTrackIdx].duration);
+    updateProgress();
+  });
+
+  // Player sheet
+  const sheet = document.getElementById('fullscreenPlayerSheet');
+  document.getElementById('floatingMiniPlayer').addEventListener('click', e => {
+    if (e.target.closest('#btnMiniPlayPause')) return;
+    triggerHaptic('medium');
+    sheet.classList.add('is-open');
+  });
+  document.getElementById('btnClosePlayerSheet').addEventListener('click', () => {
+    triggerHaptic('light');
+    sheet.classList.remove('is-open');
+  });
+
+  // Update modal
+  const modal = document.getElementById('softwareUpdateModal');
+  const openModal = () => { triggerHaptic('medium'); modal.classList.add('is-open'); };
+  const closeModal = () => { triggerHaptic('light'); modal.classList.remove('is-open'); };
+  document.getElementById('btnHeaderUpdatePill').addEventListener('click', openModal);
+  document.getElementById('btnProfileUpdateOption').addEventListener('click', openModal);
+  document.getElementById('btnModalRemind').addEventListener('click', closeModal);
+  document.getElementById('btnModalDownload').addEventListener('click', () => {
+    triggerHaptic('heavy');
+    closeModal();
+    showToast('✅ BitChord v1.9.1 Hotfix installed!');
+  });
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  // Toast pill dismiss
+  const toast = document.getElementById('systemToastPill');
+  toast.addEventListener('click', () => {
+    triggerHaptic('light');
+    toast.classList.add('dismissed');
+  });
+
+  // New playlist
+  document.getElementById('btnCreatePlaylist').addEventListener('click', () => {
+    triggerHaptic('heavy');
+    const num = PLAYLISTS.length + 1;
+    PLAYLISTS.unshift({
+      id: `pl-${Date.now()}`,
+      name: `Vibe Session #${num}`,
+      song_count: 0,
+      gradient: GRADIENTS[num % GRADIENTS.length]
+    });
+    renderPlaylists();
+    showToast(`✨ Created "Vibe Session #${num}"`);
+  });
+
+  // Haptics toggle
+  const tagHaptic = document.getElementById('tagHapticStatus');
+  document.getElementById('btnToggleHaptics').addEventListener('click', () => {
+    hapticsActive = !hapticsActive;
+    tagHaptic.textContent = hapticsActive ? 'Active' : 'Disabled';
+    tagHaptic.style.color = hapticsActive ? 'var(--accent)' : 'var(--text-muted)';
+    if (hapticsActive) triggerHaptic('heavy');
+    showToast(hapticsActive ? '📳 Haptics Enabled' : '🔕 Haptics Disabled');
+  });
+
+  // Favorite button
+  const btnFav = document.getElementById('btnSheetFavorite');
+  btnFav.addEventListener('click', () => {
+    triggerHaptic('heavy');
+    const isFav = btnFav.style.color === 'rgb(255, 71, 103)';
+    btnFav.style.color = isFav ? '#ffffff' : 'var(--accent)';
+    btnFav.style.fill = isFav ? 'none' : 'currentColor';
+    showToast(isFav ? 'Removed from Liked Songs' : '❤️ Added to Liked Songs');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+/**
+ * Mini Player - Floating Glass Pill
+ */
+.floating-mini-player {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(404px, calc(100% - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(22, 22, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.75), inset 0 1px 1px 0 rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  z-index: 90;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.floating-mini-player:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
+.mini-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--card-grad, var(--grad-coral-heart));
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  animation: discSpin 14s linear infinite paused;
+}
+
+.floating-mini-player.is-playing .mini-thumb {
+  animation-play-state: running;
+}
+
+@keyframes discSpin {
+  100% { transform: rotate(360deg); }
+}
+
+.mini-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-artist-info {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.mini-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: var(--grad-fire);
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: transform 0.14s ease;
+}
+
+.mini-play-btn:active {
+  transform: scale(0.9);
+}
+
+.mini-play-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: none;
+}
+

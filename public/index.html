@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#050508">
+  <title>MUSII — Minimal Glass Music</title>
+  
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+  <!-- Ambient Dynamic Colored Glow Orb -->
+  <div class="glass-glow-orb" id="ambientBackdropOrb" style="background: linear-gradient(135deg, #e63946, #ee7a2b); top: -80px; left: 50%; transform: translateX(-50%);"></div>
+
+  <!-- Main Responsive App Viewport (iPhone and Android Centered) -->
+  <main class="app-viewport">
+    
+    <!-- Top Header Bar -->
+    <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 22px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <!-- MUSII Glass Logo -->
+        <div style="width:36px; height:36px; border-radius:11px; display:grid; place-items:center; box-shadow:0 6px 18px var(--accent-glow);">
+          <img src="assets/logo.svg" alt="MUSII Glass Logo" style="width:100%; height:100%; border-radius:11px;">
+        </div>
+        <span style="font-size:21px; font-weight:700; letter-spacing:-0.5px; color:#fff;">MUSII</span>
+      </div>
+
+      <!-- Edge Cluster and Update Pill Badges -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span id="badgeEdgeNode" style="padding:5px 10px; border-radius:999px; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); color:var(--accent-cyan); font-size:11px; font-weight:600;">
+          Edge 1: 12ms
+        </span>
+        <button class="touch-spring" id="btnHeaderUpdatePill" style="display:flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:rgba(230,57,70,0.12); border:1px solid rgba(230,57,70,0.35); color:var(--accent); font-size:11px; font-weight:600;">
+          <span style="width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulseGlow 1.8s infinite;"></span>
+          v1.9.1 Hotfix
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: HOME VIEW -->
+    <section class="view-section active" id="view-home">
+      <h2 class="section-header">
+        Top Picks for You
+        <span style="font-size:13px; font-weight:500; color:var(--accent); cursor:pointer;">See all</span>
+      </h2>
+      <div class="picks-row" id="topPicksScroller"></div>
+
+      <h2 class="section-header" style="margin-top:28px;">
+        Recently Played
+        <span style="font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer;">History</span>
+      </h2>
+      <div style="display:flex; flex-direction:column; gap:8px;" id="recentTracksList"></div>
+    </section>
+
+    <!-- VIEW 2: PLAYLIST VIEW -->
+    <section class="view-section" id="view-playlist">
+      <h2 class="section-header">Your Playlists</h2>
+      <button class="touch-spring" id="btnCreatePlaylist" style="width:100%; padding:15px; margin-bottom:16px; border-radius:18px; background:var(--bg-surface); border:1px dashed rgba(255,255,255,0.25); color:#fff; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px; backdrop-filter:blur(20px);">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        + Create New Playlist
+      </button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" id="playlistCardsGrid"></div>
+    </section>
+
+    <!-- VIEW 3: PROFILE VIEW -->
+    <section class="view-section" id="view-profile">
+      <div style="text-align:center; margin-top:8px;">
+        <div style="width:92px; height:92px; margin:0 auto 14px; border-radius:50%; background:linear-gradient(135deg, #1f1f2e, #111118); border:2px solid rgba(255,255,255,0.22); display:grid; place-items:center; font-size:30px; font-weight:700; color:#fff; box-shadow:0 12px 30px rgba(0,0,0,0.5);">
+          MU
+        </div>
+        <h1 style="font-size:24px; font-weight:700; letter-spacing:-0.4px;">MUSII Member</h1>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:2px;">@musii_user • Audiophile Lossless</p>
+      </div>
+
+      <div style="display:flex; margin:24px 0; padding:16px 0; border-radius:18px; background:var(--bg-surface); border:1px solid var(--line-strong); text-align:center; backdrop-filter:blur(20px);">
+        <div style="flex:1;">
+          <b style="display:block; font-size:22px; font-weight:700;">18</b>
+          <span style="font-size:12px; color:var(--text-muted);">Playlists</span>
+        </div>
+        <div style="flex:1; border-left:1px solid var(--line-strong);">
+          <b style="display:block; font-size:22px; font-weight:700;">342</b>
+          <span style="font-size:12px; color:var(--text-muted);">Following</span>
+        </div>
+        <div style="flex:1; border-left:1px solid var(--line-strong);">
+          <b style="display:block; font-size:22px; font-weight:700;">5.8k</b>
+          <span style="font-size:12px; color:var(--text-muted);">Plays</span>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-surface); border-radius:18px; border:1px solid var(--line-strong); overflow:hidden; backdrop-filter:blur(20px);">
+        <button class="touch-spring" id="btnToggleHaptics" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <span>Haptic Feedback Engine</span>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(230,57,70,0.18); color:var(--accent); font-weight:600;" id="tagHapticStatus">Active</span>
+        </button>
+        <button class="touch-spring" id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <span>Software Update</span>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(245,158,11,0.18); color:var(--accent-gold); font-weight:600;">v1.9.1 Ready</span>
+        </button>
+        <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <span>Streaming Edge Mesh</span>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(6,182,212,0.18); color:var(--accent-cyan); font-weight:600;">3 Nodes Synced</span>
+        </button>
+        <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; color:var(--accent);">
+          <span>Sign Out</span>
+          <svg viewBox="0 0 24 24" style="stroke:currentColor; width:18px; height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- System Notification Toast (Pixel-Perfect from Screenshot) -->
+  <div class="system-toast-pill" id="systemToastPill">
+    Connected for charging only. Tap the USB notification to use USB for transferring files.
+  </div>
+
+  <!-- Floating Mini Player -->
+  <div class="floating-mini-player" id="floatingMiniPlayer">
+    <div class="mini-thumb" id="miniDiscThumb" style="--card-grad: var(--grad-coral-heart);">
+      <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:#fff;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+    <div class="mini-details">
+      <b class="mini-name" id="miniTrackName">Ume Tabasamu</b>
+      <span class="mini-artist-info" id="miniTrackArtist">Wakadinali • Victims of Madness</span>
+    </div>
+    <div class="mini-actions">
+      <button class="mini-play-btn" id="btnMiniPlayPause" aria-label="Play or Pause">
+        <svg viewBox="0 0 24 24" id="iconMiniPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Centered Floating Pill Navigation Bar + Circular Search Button -->
+  <div class="nav-island-wrapper">
+    <nav class="bottom-pill-bar">
+      <div class="nav-sliding-pill" id="navPillIndicator"></div>
+      
+      <!-- Home Tab -->
+      <button class="nav-tab-btn is-active tab-spring" data-tab="home" data-idx="0">
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/></svg>
+        Home
+      </button>
+
+      <!-- Playlist Tab -->
+      <button class="nav-tab-btn tab-spring" data-tab="playlist" data-idx="1">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        Playlist
+      </button>
+
+      <!-- Profile Tab -->
+      <button class="nav-tab-btn tab-spring" data-tab="profile" data-idx="2">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="7" cy="6" r="1.5"/><circle cx="17" cy="12" r="1.5"/><circle cx="10" cy="18" r="1.5"/></svg>
+        Profile
+      </button>
+    </nav>
+
+    <!-- Floating Circular Search Icon Button -->
+    <button class="floating-search-btn" id="btnQuickSearch" aria-label="Search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>
+
+  <!-- PIXEL-PERFECT SOFTWARE UPDATE MODAL -->
+  <div class="modal-backdrop" id="softwareUpdateModal">
+    <div class="update-dialog">
+      <div class="update-dialog-header">
+        <h3>Software Update</h3>
+        <p>MUSII 1.9.1 is available to download.</p>
+      </div>
+
+      <div class="update-whats-new">
+        <div class="whats-new-title">What's new</div>
+        
+        <!-- Golden Amber Coldplay Lyrics Showcase Card -->
+        <div class="preview-showcase">
+          <div class="showcase-brand">
+            <img src="assets/logo.svg" alt="MUSII Logo" style="width:16px; height:16px; border-radius:4px; margin-right:4px;">
+            MUSII
+          </div>
+
+          <div class="showcase-phone-mockup">
+            <div class="mockup-header">
+              <span class="mockup-badge"></span>
+              <span class="mockup-title">WM+ • Coldplay</span>
+            </div>
+            <div class="mockup-lyrics">
+              <span>Look how they shine</span>
+              <span>for you</span>
+              <span class="dimmed">And everything you do</span>
+              <span>Yeah, they were all</span>
+              <span>yellow</span>
+              <span class="dimmed">I came along</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="update-meta-block">
+          <h4>Hotfix</h4>
+          <p>A small hotfix release on top of v1.9 with multi-server edge playback and zero buffering delay.</p>
+          <span class="update-changelog-link" id="btnViewChangelog">Changelog</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal-primary" id="btnModalDownload">Download Now</button>
+        <button class="btn-modal-secondary" id="btnModalRemind">Remind Me Later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN GLASS PLAYER SHEET -->
+  <div class="fullscreen-player-sheet" id="fullscreenPlayerSheet">
+    <div class="sheet-top-bar">
+      <button class="sheet-icon-btn" id="btnClosePlayerSheet">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <span style="font-size:13px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted)">Now Playing</span>
+      <button class="sheet-icon-btn" id="btnSheetFavorite">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </button>
+    </div>
+
+    <div class="sheet-cover-container" id="sheetCoverArt" style="--card-grad: var(--grad-coral-heart);">
+      <svg viewBox="0 0 24 24" style="width:72px; height:72px; stroke:#fff;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+
+    <div class="sheet-meta-info">
+      <h1 class="sheet-title" id="sheetTrackTitle">Ume Tabasamu</h1>
+      <p class="sheet-artist" id="sheetTrackArtist">Wakadinali</p>
+    </div>
+
+    <div class="lyrics-glass-card">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.5); margin-bottom:4px;">Lyrics Highlight</div>
+      <div class="lyrics-text" id="sheetLyricsText">"Looking at the city lights glowing through the dark skyline"</div>
+    </div>
+
+    <div class="scrubber-container">
+      <div class="scrubber-track" id="sheetScrubberTrack">
+        <div class="scrubber-fill" id="sheetScrubberFill">
+          <div class="scrubber-thumb"></div>
+        </div>
+      </div>
+      <div class="scrubber-timestamps">
+        <span id="sheetCurrentTime">0:00</span>
+        <span id="sheetTotalTime">3:34</span>
+      </div>
+    </div>
+
+    <div class="transport-controls">
+      <button class="transport-btn-skip" id="btnSheetPrev" aria-label="Previous">
+        <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+      </button>
+      <button class="transport-btn-main" id="btnSheetPlayPause" aria-label="Play or Pause">
+        <svg viewBox="0 0 24 24" id="iconSheetPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
+      </button>
+      <button class="transport-btn-skip" id="btnSheetNext" aria-label="Next">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

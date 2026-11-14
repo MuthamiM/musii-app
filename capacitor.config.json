@@ -1,0 +1,9 @@
+{
+  "appId": "com.musii.app",
+  "appName": "MUSII",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

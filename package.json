@@ -1,0 +1,32 @@
+{
+  "name": "bitchord-app",
+  "version": "1.9.1",
+  "description": "BitChord - Minimalist Liquid Glass Music App with better-sqlite3 Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node src/db/database.js"
+  },
+  "keywords": [
+    "music",
+    "glassmorphism",
+    "liquid-glass",
+    "sqlite",
+    "pwa",
+    "haptics",
+    "web-audio"
+  ],
+  "author": "Antigravity Team",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "better-sqlite3": "^13.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "morgan": "^1.12.1"
+  }
+}
