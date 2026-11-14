@@ -1,4 +1,4 @@
-# MUSII -- Minimalist Liquid Glass Music App (v1.9.1)
+# MUSII -- Minimalist Liquid Glass Music App (v1.9.2)
 
 Pixel-perfect recreation of the MUSII mobile music interface featuring frosted glassmorphism, responsive OLED obsidian styling, tactile mobile haptics, real-time streaming audio, real album cover art, and an ultra-fast better-sqlite3 database engine.
 
