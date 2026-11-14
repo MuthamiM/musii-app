@@ -272,12 +272,12 @@ class PlaylistController {
 
     container.innerHTML = this.cachedSongs.map((song, i) => `
       <div class="track-row touch-spring" style="opacity:0.85;">
-        <div class="track-avatar" style="--card-grad: ${song.gradient || 'linear-gradient(135deg,#6366f1,#a855f7)'};">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        <div class="track-avatar">
+          <img class="track-avatar-img" src="${song.cover_art || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'}" alt="${song.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'">
         </div>
         <div class="track-meta">
           <span class="track-name">${song.title}</span>
-          <span class="track-artist">${song.artist} -- ${song.file_size_mb || '?'} MB</span>
+          <span class="track-artist">${song.artist} • ${song.file_size_mb || '?'} MB</span>
         </div>
         <div style="font-size:11px; padding:4px 8px; border-radius:999px; background:rgba(6,182,212,0.12); color:var(--accent-cyan); font-weight:600;">
           Cached
@@ -296,15 +296,24 @@ class PlaylistController {
   render() {
     if (!this.container) return;
 
-    this.container.innerHTML = this.playlists.map((pl, idx) => `
+    const defaultCovers = {
+      'pl-liked': 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f3/5a/67/f35a67ae-de94-1e98-8f3e-ab73358f9092/06UMGIM10554.rgb.jpg/600x600bb.jpg',
+      'pl-road': 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg',
+      'pl-focus': 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3e/42/a7/3e42a78d-57a3-fd69-6703-14d51205dd4c/13UMGIM24968.rgb.jpg/600x600bb.jpg'
+    };
+
+    this.container.innerHTML = this.playlists.map((pl, idx) => {
+      const cover = defaultCovers[pl.id] || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+      return `
       <div class="playlist-card touch-spring" data-id="${pl.id}" style="padding:14px; border-radius:20px; background:var(--bg-surface); border:1px solid var(--line-strong); box-shadow:inset 0 1px 1px rgba(255,255,255,0.18); backdrop-filter:blur(20px);">
-        <div style="width:100%; aspect-ratio:1; border-radius:14px; background:${pl.gradient}; margin-bottom:10px; display:grid; place-items:center; box-shadow:inset 0 1px 1px rgba(255,255,255,0.3);">
-          <svg viewBox="0 0 24 24" style="width:28px; height:28px; stroke:#fff"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <div style="width:100%; aspect-ratio:1; border-radius:14px; overflow:hidden; margin-bottom:10px; box-shadow:0 8px 18px rgba(0,0,0,0.5);">
+          <img src="${cover}" alt="${pl.name}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'">
         </div>
         <b style="display:block; font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pl.name}</b>
         <span style="font-size:12px; color:var(--text-muted);">${pl.song_count || 0} tracks</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 }
 

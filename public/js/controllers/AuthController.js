@@ -18,8 +18,10 @@ class AuthController {
     this.overlay = document.getElementById('authOverlay');
     this.stepEmail = document.getElementById('authStepEmail');
     this.stepCode = document.getElementById('authStepCode');
+    this.stepUsername = document.getElementById('authStepUsername');
     this.inputEmail = document.getElementById('authInputEmail');
     this.inputCode = document.getElementById('authInputCode');
+    this.inputUsername = document.getElementById('authInputUsername');
 
     this.bindEvents();
 
@@ -36,7 +38,18 @@ class AuthController {
     const btnVerify = document.getElementById('btnAuthVerify');
     const btnResend = document.getElementById('btnAuthResend');
     const btnChangeEmail = document.getElementById('btnAuthChangeEmail');
+    const btnSetUsername = document.getElementById('btnAuthSetUsername');
     const btnSignOut = document.getElementById('btnProfileSignOut');
+
+    if (btnSetUsername) {
+      btnSetUsername.addEventListener('click', () => this.handleSetUsername());
+    }
+
+    if (this.inputUsername) {
+      this.inputUsername.addEventListener('keydown', e => {
+        if (e.key === 'Enter') this.handleSetUsername();
+      });
+    }
 
     if (btnSend) {
       btnSend.addEventListener('click', () => this.handleSendCode());
@@ -109,6 +122,68 @@ class AuthController {
     if (this.inputCode) {
       this.inputCode.value = '';
       setTimeout(() => this.inputCode.focus(), 150);
+    }
+  }
+
+  showUsernameStep(user) {
+    if (this.stepEmail) this.stepEmail.classList.remove('active');
+    if (this.stepCode) this.stepCode.classList.remove('active');
+    if (this.stepUsername) this.stepUsername.classList.add('active');
+
+    if (this.inputUsername) {
+      this.inputUsername.value = user?.name || '';
+      setTimeout(() => this.inputUsername.focus(), 150);
+    }
+  }
+
+  async handleSetUsername() {
+    const rawUsername = this.inputUsername ? this.inputUsername.value.trim() : '';
+    const clean = rawUsername.replace(/^@/, '');
+    if (!clean || clean.length < 3) {
+      haptics.trigger('heavy');
+      errorHandler.showToast('Please enter at least 3 characters for your username');
+      return;
+    }
+
+    const btn = document.getElementById('btnAuthSetUsername');
+    if (btn) btn.disabled = true;
+
+    haptics.trigger('medium');
+
+    try {
+      const res = await fetch(apiUrl('/api/auth/set-username'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`
+        },
+        body: JSON.stringify({ username: clean })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem('musii_user', JSON.stringify(data.data.user));
+        this.updateProfileUI(data.data.user);
+        this.hideAuth();
+        haptics.trigger('heavy');
+        errorHandler.showToast(`Welcome to MUSII, @${clean}!`);
+
+        window.dispatchEvent(new CustomEvent('musii:user-updated', { detail: { user: data.data.user } }));
+
+        // Start playing music
+        setTimeout(() => {
+          if (!audioController.isPlaying) {
+            audioController.play();
+          }
+        }, 400);
+      } else {
+        throw new Error(data.error?.message || 'Failed to set username');
+      }
+    } catch (err) {
+      haptics.trigger('heavy');
+      errorHandler.showToast(err.message || 'Error updating username');
+    } finally {
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -194,17 +269,8 @@ class AuthController {
         localStorage.setItem('musii_token', this.token);
         localStorage.setItem('musii_user', JSON.stringify(data.data.user));
 
-        this.updateProfileUI(data.data.user);
-        this.hideAuth();
-        haptics.trigger('heavy');
-        errorHandler.showToast(`Signed in as ${data.data.user.email}`);
-
-        // Start playing music
-        setTimeout(() => {
-          if (!audioController.isPlaying) {
-            audioController.play();
-          }
-        }, 500);
+        haptics.trigger('medium');
+        this.showUsernameStep(data.data.user);
       } else {
         throw new Error(data.error?.message || 'Invalid code');
       }

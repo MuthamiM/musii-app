@@ -43,7 +43,12 @@ class MusicService {
   }
 
   async getCachedSongs() {
-    return db.prepare('SELECT * FROM cached_songs ORDER BY cached_at DESC').all();
+    return db.prepare(`
+      SELECT c.*, COALESCE(t.cover_art, '') as cover_art 
+      FROM cached_songs c 
+      LEFT JOIN tracks t ON c.track_id = t.id 
+      ORDER BY c.cached_at DESC
+    `).all();
   }
 
   async clearCache() {

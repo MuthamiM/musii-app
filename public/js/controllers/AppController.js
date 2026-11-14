@@ -3,6 +3,8 @@ import { navigationController } from './NavigationController.js';
 import { playlistController } from './PlaylistController.js';
 import { modalController } from './ModalController.js';
 import { authController } from './AuthController.js';
+import { settingsController } from './SettingsController.js';
+import { searchController } from './SearchController.js';
 import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
 import { DEFAULT_TRACKS, DEFAULT_PICKS } from '../constants/tracks.js';
@@ -18,7 +20,12 @@ class AppController {
     navigationController.init();
     playlistController.init();
     modalController.init();
+    settingsController.init();
+    searchController.init();
     await authController.init();
+    this.updateGreeting();
+
+    window.addEventListener('musii:user-updated', () => this.updateGreeting());
 
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       try {
@@ -68,8 +75,12 @@ class AppController {
     const scroller = document.getElementById('topPicksScroller');
     if (!scroller) return;
 
-    scroller.innerHTML = this.picks.map((pick, i) => `
-      <div class="music-card touch-spring" style="--card-grad: ${pick.gradient};" data-track-id="${pick.trackId || pick.track_id || 1}">
+    scroller.innerHTML = this.picks.map((pick, i) => {
+      const coverUrl = pick.image || (this.tracks.find(t => t.id === (pick.trackId || pick.track_id)) || {}).cover_art || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+      return `
+      <div class="music-card touch-spring" data-track-id="${pick.trackId || pick.track_id || 1}">
+        <img class="music-card-bg-img" src="${coverUrl}" alt="${pick.title}" loading="lazy" />
+        <div class="music-card-overlay"></div>
         <svg class="card-decor-heart" viewBox="0 0 100 90" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="4 4">
           <path d="M50 80 C20 55, 5 35, 15 18 C25 2, 45 8, 50 25 C55 8, 75 2, 85 18 C95 35, 80 55, 50 80 Z"/>
         </svg>
@@ -81,12 +92,13 @@ class AppController {
         </div>
 
         <div class="card-bottom-info">
-          <span class="card-tag">${pick.category || 'Mood Mix'}</span>
+          <span class="card-tag">${pick.category || 'Featured Album'}</span>
           <b class="card-title">${pick.title}</b>
           <span class="card-subtitle">${pick.subtitle}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   renderRecentTracks() {
@@ -95,8 +107,8 @@ class AppController {
 
     container.innerHTML = this.tracks.map((track, i) => `
       <div class="track-row touch-spring ${i === 0 ? 'now-playing' : ''}" data-idx="${i}">
-        <div class="track-avatar" style="--card-grad: ${track.gradient};">
-          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <div class="track-avatar">
+          <img class="track-avatar-img" src="${track.cover_art}" alt="${track.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'" />
         </div>
         <div class="track-meta">
           <span class="track-name">${track.title}</span>
@@ -121,7 +133,8 @@ class AppController {
     audioController.subscribe(({ track, isPlaying }) => {
       document.getElementById('miniTrackName').textContent = track.title;
       document.getElementById('miniTrackArtist').textContent = `${track.artist} • ${track.album}`;
-      document.getElementById('miniDiscThumb').style.setProperty('--card-grad', track.gradient);
+      const miniImg = document.getElementById('miniCoverImg');
+      if (miniImg && track.cover_art) miniImg.src = track.cover_art;
       document.getElementById('floatingMiniPlayer').classList.toggle('is-playing', isPlaying);
 
       document.getElementById('iconMiniPlayPause').innerHTML = isPlaying ? PAUSE_SVG : PLAY_SVG;
@@ -132,7 +145,9 @@ class AppController {
 
       document.getElementById('sheetTrackTitle').textContent = track.title;
       document.getElementById('sheetTrackArtist').textContent = track.artist;
-      document.getElementById('sheetCoverArt').style.setProperty('--card-grad', track.gradient);
+      const sheetImg = document.getElementById('sheetCoverImg');
+      if (sheetImg && track.cover_art) sheetImg.src = track.cover_art;
+      document.getElementById('sheetTotalTime').textContent = audioController.formatTime(track.duration);
       document.getElementById('sheetTotalTime').textContent = audioController.formatTime(track.duration);
 
       const lyricsEl = document.getElementById('sheetLyricsText');

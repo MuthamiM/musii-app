@@ -1,0 +1,9 @@
+node_modules
+android
+.git
+.github
+.gemini
+.gradle
+*.apk
+npm-debug.log*
+

@@ -39,6 +39,27 @@ class AuthController {
     }
   }
 
+  async setUsername(req, res, next) {
+    try {
+      const authHeader = req.headers.authorization;
+      const token = authHeader && authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : req.body.token;
+
+      const { username } = req.body;
+      const result = await authService.setUsername(token, username);
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (err) {
+      res.status(400).json({
+        success: false,
+        error: { message: err.message }
+      });
+    }
+  }
+
   async validateSession(req, res, next) {
     try {
       const authHeader = req.headers.authorization;
@@ -81,3 +102,4 @@ class AuthController {
 }
 
 module.exports = new AuthController();
+

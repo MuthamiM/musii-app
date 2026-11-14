@@ -87,8 +87,44 @@ class AuthService {
     return {
       success: true,
       token,
+      requiresUsername: true,
       user: {
         email: cleanEmail,
+        name: user.name,
+        handle: user.handle,
+        avatar_initial: user.avatar_initial
+      }
+    };
+  }
+
+  async setUsername(token, rawUsername) {
+    if (!rawUsername) {
+      throw new Error('Username is required');
+    }
+
+    const clean = rawUsername.trim().replace(/^@/, '');
+    if (!/^[a-zA-Z0-9_]{3,24}$/.test(clean)) {
+      throw new Error('Username must be 3-24 characters (letters, numbers, underscores)');
+    }
+
+    const session = await this.validateSession(token);
+    if (!session.valid) {
+      throw new Error('Unauthorized or session expired');
+    }
+
+    const initial = clean[0].toUpperCase();
+    db.prepare(`
+      UPDATE user_profile
+      SET name = ?, handle = ?, avatar_initial = ?
+      WHERE id = 'usr-1'
+    `).run(clean, `@${clean}`, initial);
+
+    const user = db.prepare('SELECT * FROM user_profile WHERE id = ?').get('usr-1');
+
+    return {
+      success: true,
+      user: {
+        email: session.email,
         name: user.name,
         handle: user.handle,
         avatar_initial: user.avatar_initial
@@ -121,3 +157,4 @@ class AuthService {
 }
 
 module.exports = new AuthService();
+

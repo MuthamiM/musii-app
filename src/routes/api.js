@@ -5,6 +5,9 @@ const musicRoutes = require('./musicRoutes');
 const playlistRoutes = require('./playlistRoutes');
 const userRoutes = require('./userRoutes');
 const authRoutes = require('./authRoutes');
+const streamRoutes = require('./streamRoutes');
+const spotifyRoutes = require('./spotifyRoutes');
+const lyricsRoutes = require('./lyricsRoutes');
 const edgeRouter = require('../services/edgeRouter');
 
 // API status & healthcheck endpoint (strictly NO emojis)
@@ -34,5 +37,8 @@ router.use('/music', musicRoutes);
 router.use('/playlists', playlistRoutes);
 router.use('/user', userRoutes);
 router.use('/auth', authRoutes);
+router.use('/stream', streamRoutes);
+router.use('/spotify', spotifyRoutes);
+router.use('/lyrics', lyricsRoutes);
 
 module.exports = router;

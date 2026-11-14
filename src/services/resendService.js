@@ -111,3 +111,4 @@ class ResendService {
 }
 
 module.exports = new ResendService();
+

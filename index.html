@@ -1303,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnModalDownload').addEventListener('click', () => {
     triggerHaptic('heavy');
     closeModal();
-    showToast('✅ BitChord v1.9.1 Hotfix installed!');
+    showToast(' BitChord v1.9.1 Hotfix installed!');
   });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
@@ -1325,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       gradient: GRADIENTS[num % GRADIENTS.length]
     });
     renderPlaylists();
-    showToast(`✨ Created "Vibe Session #${num}"`);
+    showToast(` Created "Vibe Session #${num}"`);
   });
 
   // Haptics toggle
@@ -1335,7 +1335,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tagHaptic.textContent = hapticsActive ? 'Active' : 'Disabled';
     tagHaptic.style.color = hapticsActive ? 'var(--accent)' : 'var(--text-muted)';
     if (hapticsActive) triggerHaptic('heavy');
-    showToast(hapticsActive ? '📳 Haptics Enabled' : '🔕 Haptics Disabled');
+    showToast(hapticsActive ? ' Haptics Enabled' : ' Haptics Disabled');
   });
 
   // Favorite button
@@ -1345,7 +1345,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isFav = btnFav.style.color === 'rgb(255, 71, 103)';
     btnFav.style.color = isFav ? '#ffffff' : 'var(--accent)';
     btnFav.style.fill = isFav ? 'none' : 'currentColor';
-    showToast(isFav ? 'Removed from Liked Songs' : '❤️ Added to Liked Songs');
+    showToast(isFav ? 'Removed from Liked Songs' : '️ Added to Liked Songs');
   });
 });
 </script>

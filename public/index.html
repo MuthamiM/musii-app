@@ -58,6 +58,20 @@
           <button class="auth-secondary-btn" id="btnAuthChangeEmail" style="width:auto; margin:0; padding:8px 10px;">Change Email</button>
         </div>
       </div>
+
+      <!-- Step 3: Choose Username -->
+      <div class="auth-step" id="authStepUsername">
+        <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 6px; color: #fff;">Choose Username</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 20px;">Pick your personal handle to start listening.</p>
+        <div class="auth-input-group">
+          <label for="authInputUsername">Your Unique Handle</label>
+          <input type="text" id="authInputUsername" class="auth-text-input" placeholder="muthami" maxlength="24" autocomplete="username" required>
+        </div>
+        <button class="auth-primary-btn touch-spring" id="btnAuthSetUsername">
+          <span>Start Listening</span>
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -91,6 +105,17 @@
 
     <!-- VIEW 1: HOME VIEW -->
     <section class="view-section active" id="view-home">
+      <!-- Dynamic Time-Based Greeting -->
+      <div style="margin-bottom: 24px;">
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-gold); display: flex; align-items: center; gap: 7px; margin-bottom: 4px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-gold); box-shadow: 0 0 6px var(--accent-gold);"></span>
+          <span id="labelGreetingTime">17:47 • Audiophile</span>
+        </div>
+        <h1 style="font-size: 27px; font-weight: 800; letter-spacing: -0.6px; margin: 0; color: #ffffff;" id="homeGreetingHeader">
+          Good morning, Member
+        </h1>
+      </div>
+
       <h2 class="section-header">
         Top Picks for You
         <span style="font-size:13px; font-weight:500; color:var(--accent); cursor:pointer;">See all</span>
@@ -147,6 +172,20 @@
       </div>
 
       <div style="background:var(--bg-surface); border-radius:18px; border:1px solid var(--line-strong); overflow:hidden; backdrop-filter:blur(20px);">
+        <button class="touch-spring" id="btnOpenSpotifyImport" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line); color:#1db954;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+            <span style="font-weight:600;">Import from Spotify Link</span>
+          </div>
+          <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(29,185,84,0.18); color:#1db954; font-weight:600;">Link Import</span>
+        </button>
+        <button class="touch-spring" id="btnOpenSettingsView" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Full Settings Menu</span>
+          </div>
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--text-muted);fill:none;stroke-width:2;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
         <button class="touch-spring" id="btnToggleHaptics" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Haptic Feedback Engine</span>
           <span style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(230,57,70,0.18); color:var(--accent); font-weight:600;" id="tagHapticStatus">Active</span>
@@ -173,6 +212,314 @@
         </button>
       </div>
     </section>
+
+    <!-- VIEW 4: PIXEL-PERFECT SETTINGS VIEW (From User Screenshots) -->
+    <section class="view-section" id="view-settings">
+      <!-- Back Button & Header -->
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:12px;">
+        <button class="touch-spring" id="btnSettingsBack" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); display:grid; place-items:center; cursor:pointer;">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.5;"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted);">Back to App</span>
+      </div>
+
+      <h1 style="font-size:32px; font-weight:800; letter-spacing:-0.6px; margin:0 0 18px; color:#fff;">Settings</h1>
+
+      <!-- Search Settings Bar -->
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:18px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); margin-bottom:20px;">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:2;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="inputSearchSettings" placeholder="Search settings" style="background:none; border:none; outline:none; color:#fff; font-size:15px; width:100%;">
+      </div>
+
+      <!-- Settings Card 1: Account & Social -->
+      <div class="settings-card-group">
+        <button class="settings-item-row touch-spring" id="btnAccountIntegrations">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+              <span class="settings-item-title">Account & integrations</span>
+              <span class="settings-item-subtitle">Signed in • Spotify & YouTube active</span>
+            </div>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring" id="btnListenTogether">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+              <span class="settings-item-title">Listen together</span>
+              <span class="settings-item-subtitle">Share a code and play the same music, in time</span>
+            </div>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+      </div>
+
+      <!-- AUDIO QUALITY HEADER -->
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin:20px 4px 8px;">AUDIO QUALITY</div>
+
+      <!-- Settings Card 2: Audio Quality & Sources -->
+      <div class="settings-card-group">
+        <button class="settings-item-row touch-spring" id="btnSettingsSources">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+            <div>
+              <span class="settings-item-title">Sources</span>
+              <span class="settings-item-subtitle">Where audio comes from and the order used</span>
+            </div>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <div class="settings-item-row" style="cursor:default;">
+          <div class="settings-item-left">
+            <div>
+              <span class="settings-item-title">Direct Source Stream</span>
+            </div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="toggleDirectStream" checked>
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="settings-item-title">On Wi-Fi</span>
+              <span class="settings-in-use-badge">IN USE</span>
+            </div>
+          </div>
+          <div class="settings-item-right">
+            <span>Lossless</span>
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </div>
+            <div>
+              <span class="settings-item-title">On mobile data</span>
+            </div>
+          </div>
+          <div class="settings-item-right">
+            <span>Lossless</span>
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <div class="settings-item-row" style="cursor:default;">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle" style="background:#111;">
+              <span style="font-size:12px; font-weight:800; letter-spacing:-0.5px;">DO</span>
+            </div>
+            <div>
+              <span class="settings-item-title">Dolby Atmos</span>
+              <span class="settings-item-subtitle">Play the more immersive, surround version of a song when there is one.</span>
+            </div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="toggleDolbyAtmos" checked>
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Settings Card 3: Library, Local & Performance Features -->
+      <div class="settings-card-group">
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            </div>
+            <span class="settings-item-title">Downloads</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            </div>
+            <span class="settings-item-title">Playback</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            </div>
+            <span class="settings-item-title">Appearance</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <span class="settings-item-title">Performance</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <span class="settings-item-title">Local Music</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            </div>
+            <span class="settings-item-title">Storage</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+            </div>
+            <span class="settings-item-title">Your data</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </div>
+            <span class="settings-item-title">Miscellaneous</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <span class="settings-item-title">Language</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <span class="settings-item-title">Advanced & experimental options</span>
+          </div>
+          <div class="settings-item-right">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+      </div>
+
+      <!-- Settings Card 4: Wear OS -->
+      <div class="settings-card-group">
+        <button class="settings-item-row touch-spring">
+          <div class="settings-item-left">
+            <div class="settings-icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><polyline points="12 9 12 12 13.5 13.5"/><path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"/></svg>
+            </div>
+            <span class="settings-item-title">MUSII for Wear OS</span>
+          </div>
+          <div class="settings-item-right">
+            <span>No watch</span>
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </button>
+      </div>
+
+      <!-- Footer Info -->
+      <div style="text-align:center; padding:20px 0 40px; font-size:12px; color:var(--text-muted); line-height:1.8;">
+        <span>musii 1.9.1 • GitHub • Developer • Discord • Website</span>
+      </div>
+    </section>
+
+    <!-- VIEW 5: SEARCH VIEW (Pixel-Perfect Matching Screenshot media_1794668942891_0b4eff00.jpg) -->
+    <section class="view-section" id="view-search">
+      <!-- Search Top Bar -->
+      <div class="search-header-row">
+        <div class="search-input-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="mainSearchInput" class="search-input-field" placeholder="Artists, Songs, Lyrics and More" autocomplete="off" autocorrect="off">
+        </div>
+        <button class="search-profile-btn touch-spring" id="searchProfileBtn" aria-label="Profile">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+      </div>
+
+      <!-- Filter Pills: YouTube, Library, Addons -->
+      <div class="search-filter-pills">
+        <button class="search-pill-btn is-active" data-filter="youtube">YouTube</button>
+        <button class="search-pill-btn" data-filter="library">Library</button>
+        <button class="search-pill-btn" data-filter="addons">Addons</button>
+      </div>
+
+      <!-- Section Title & Clear Button -->
+      <div class="search-section-header">
+        <h3 class="search-section-title" id="searchSectionHeader">Recent searches</h3>
+        <button class="search-btn-clear" id="btnClearRecentSearches">Clear</button>
+      </div>
+
+      <!-- Tracks List (With REAL ALBUM COVER ART) -->
+      <div class="search-list-container" id="searchTracksList">
+        <!-- Rendered dynamically by SearchController -->
+      </div>
+    </section>
   </main>
 
   <!-- System Notification Toast (Pixel-Perfect from Screenshot) -->
@@ -182,12 +529,12 @@
 
   <!-- Floating Mini Player -->
   <div class="floating-mini-player" id="floatingMiniPlayer">
-    <div class="mini-thumb" id="miniDiscThumb" style="--card-grad: var(--grad-coral-heart);">
-      <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:#fff;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <div class="mini-thumb" id="miniDiscThumb">
+      <img id="miniCoverImg" src="https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg" alt="Cover" class="mini-thumb-img">
     </div>
     <div class="mini-details">
-      <b class="mini-name" id="miniTrackName">Ume Tabasamu</b>
-      <span class="mini-artist-info" id="miniTrackArtist">Wakadinali • Victims of Madness</span>
+      <b class="mini-name" id="miniTrackName">Make No Sense</b>
+      <span class="mini-artist-info" id="miniTrackArtist">YoungBoy Never Broke Again • AI YoungBoy 2</span>
     </div>
     <div class="mini-actions">
       <button class="mini-play-btn" id="btnMiniPlayPause" aria-label="Play or Pause">
@@ -207,16 +554,16 @@
         Home
       </button>
 
-      <!-- Playlist Tab -->
+      <!-- Explore Tab -->
       <button class="nav-tab-btn tab-spring" data-tab="playlist" data-idx="1">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-        Playlist
+        Explore
       </button>
 
-      <!-- Profile Tab -->
+      <!-- Library Tab -->
       <button class="nav-tab-btn tab-spring" data-tab="profile" data-idx="2">
         <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="7" cy="6" r="1.5"/><circle cx="17" cy="12" r="1.5"/><circle cx="10" cy="18" r="1.5"/></svg>
-        Profile
+        Library
       </button>
     </nav>
 
@@ -247,6 +594,26 @@
   <div id="trackContextMenu" style="display:none; position:fixed; z-index:9999; min-width:200px; padding:8px 0; border-radius:16px; background:rgba(20,20,28,0.95); border:1px solid rgba(255,255,255,0.12); backdrop-filter:blur(30px); box-shadow:0 16px 48px rgba(0,0,0,0.6);">
     <div style="padding:10px 18px 8px; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Add to Playlist</div>
     <div id="contextMenuPlaylistList"></div>
+  </div>
+
+  <!-- SPOTIFY LINK IMPORT MODAL -->
+  <div class="modal-backdrop" id="spotifyImportModal">
+    <div class="update-dialog" style="max-width:360px;">
+      <div class="update-dialog-header">
+        <div style="width:44px; height:44px; border-radius:14px; background:#1db954; margin:0 auto 12px; display:grid; place-items:center; box-shadow:0 8px 24px rgba(29,185,84,0.35);">
+          <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#fff;"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        </div>
+        <h3>Import from Spotify</h3>
+        <p>Paste any track, album, or playlist URL to stream in real time.</p>
+      </div>
+      <div style="padding:0 24px 18px;">
+        <input type="url" id="inputSpotifyUrl" placeholder="https://open.spotify.com/track/..." style="width:100%; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.18); color:#fff; font-size:14px; outline:none; box-sizing:border-box;">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-primary" id="btnConfirmSpotifyImport" style="background:#1db954; color:#fff;">Import & Stream</button>
+        <button class="btn-modal-secondary" id="btnCancelSpotifyImport">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- PIXEL-PERFECT SOFTWARE UPDATE MODAL -->
@@ -309,18 +676,20 @@
       </button>
     </div>
 
-    <div class="sheet-cover-container" id="sheetCoverArt" style="--card-grad: var(--grad-coral-heart);">
-      <svg viewBox="0 0 24 24" style="width:72px; height:72px; stroke:#fff;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <div class="sheet-cover-container" id="sheetCoverArt">
+      <img id="sheetCoverImg" src="https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg" alt="Cover Art" class="sheet-cover-img">
     </div>
 
     <div class="sheet-meta-info">
-      <h1 class="sheet-title" id="sheetTrackTitle">Ume Tabasamu</h1>
-      <p class="sheet-artist" id="sheetTrackArtist">Wakadinali</p>
+      <h1 class="sheet-title" id="sheetTrackTitle">Make No Sense</h1>
+      <p class="sheet-artist" id="sheetTrackArtist">YoungBoy Never Broke Again</p>
     </div>
 
-    <div class="lyrics-glass-card">
-      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.5); margin-bottom:4px;">Lyrics Highlight</div>
-      <div class="lyrics-text" id="sheetLyricsText">"Looking at the city lights glowing through the dark skyline"</div>
+    <div class="lyrics-glass-card" style="max-height: 180px; overflow: hidden; display: flex; flex-direction: column;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.5); margin-bottom:6px; flex-shrink: 0;">Synced Lyrics • LRCLIB</div>
+      <div class="synced-lyrics-list" id="sheetLyricsContainer">
+        <div class="synced-lyric-item is-active" id="sheetLyricsText">Looking at the city lights glowing through the dark skyline</div>
+      </div>
     </div>
 
     <div class="scrubber-container">

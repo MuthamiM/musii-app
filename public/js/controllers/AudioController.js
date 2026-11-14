@@ -9,8 +9,48 @@ class AudioController {
     this.currentIdx = 0;
     this.isPlaying = false;
     this.currentTime = 0;
-    this.ticker = null;
+    this.duration = 214;
     this.listeners = [];
+    this.syncedLyrics = [];
+    this.currentLyricIdx = -1;
+    this.useDirectStream = true;
+
+    // Native HTML5 Realtime Audio Element
+    this.audio = new Audio();
+    this.audio.preload = 'auto';
+
+    this.initAudioListeners();
+  }
+
+  initAudioListeners() {
+    this.audio.addEventListener('timeupdate', () => {
+      this.currentTime = Math.floor(this.audio.currentTime);
+      if (this.audio.duration && !isNaN(this.audio.duration)) {
+        this.duration = Math.floor(this.audio.duration);
+      }
+      this.notifyProgress();
+      this.checkLyricsSync();
+    });
+
+    this.audio.addEventListener('ended', () => {
+      this.next();
+    });
+
+    this.audio.addEventListener('error', (e) => {
+      console.warn('[AudioController] Stream error, falling back to Web Audio Synth:', e);
+      const track = this.getCurrentTrack();
+      audioSynth.playTrack(track);
+    });
+
+    this.audio.addEventListener('play', () => {
+      this.isPlaying = true;
+      this.notify();
+    });
+
+    this.audio.addEventListener('pause', () => {
+      this.isPlaying = false;
+      this.notify();
+    });
   }
 
   setTracks(tracks) {
@@ -25,15 +65,15 @@ class AudioController {
   }
 
   formatTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+    const s = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}:${rem < 10 ? '0' : ''}${rem}`;
   }
 
-  play() {
+  async play() {
     const track = this.getCurrentTrack();
     this.isPlaying = true;
-    audioSynth.playTrack(track);
 
     // Record play on backend to increment play count and auto-cache
     if (track && track.id) {
@@ -45,23 +85,29 @@ class AudioController {
         .catch(() => {});
     }
 
-    if (this.ticker) clearInterval(this.ticker);
-    this.ticker = setInterval(() => {
-      this.currentTime++;
-      if (this.currentTime >= track.duration) {
-        this.next();
-      } else {
-        this.notifyProgress();
+    if (this.useDirectStream) {
+      const streamUrl = apiUrl(`/api/stream/play?q=${encodeURIComponent(track.artist + ' ' + track.title)}`);
+      if (this.audio.src !== streamUrl) {
+        this.audio.src = streamUrl;
       }
-    }, 1000);
+      try {
+        await this.audio.play();
+      } catch (err) {
+        // Fallback to synth if autoplay blocked or network offline
+        audioSynth.playTrack(track);
+      }
+    } else {
+      audioSynth.playTrack(track);
+    }
 
+    this.loadLyrics(track);
     this.notify();
   }
 
   pause() {
     this.isPlaying = false;
+    this.audio.pause();
     audioSynth.stop();
-    if (this.ticker) clearInterval(this.ticker);
     this.notify();
   }
 
@@ -78,12 +124,43 @@ class AudioController {
     haptics.trigger('medium');
     this.currentIdx = (index + this.tracks.length) % this.tracks.length;
     this.currentTime = 0;
+    this.currentLyricIdx = -1;
+    this.syncedLyrics = [];
+
+    const track = this.getCurrentTrack();
+    this.duration = track.duration || 210;
+
+    if (this.useDirectStream) {
+      this.audio.src = apiUrl(`/api/stream/play?q=${encodeURIComponent(track.artist + ' ' + track.title)}`);
+    }
+
     this.notifyProgress();
     if (autoPlay) {
       this.play();
     } else {
       this.notify();
     }
+  }
+
+  playSong(song) {
+    let idx = this.tracks.findIndex(t => t.id === song.id || (t.title.toLowerCase() === song.title.toLowerCase() && t.artist.toLowerCase() === song.artist.toLowerCase()));
+    if (idx === -1) {
+      const newTrack = {
+        id: song.id || Date.now(),
+        title: song.title,
+        artist: song.artist || 'Unknown Artist',
+        album: song.album || 'Single',
+        duration: song.duration || 210,
+        rootFreq: 220,
+        gradient: song.gradient || 'linear-gradient(135deg, #e63946 0%, #1e1b4b 100%)',
+        category: 'Search Stream',
+        cover_art: song.cover_art || song.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg',
+        lyricsSnippet: song.lyricsSnippet || `Now streaming ${song.title} by ${song.artist}`
+      };
+      this.tracks.unshift(newTrack);
+      idx = 0;
+    }
+    this.selectTrack(idx, true);
   }
 
   next() {
@@ -98,9 +175,59 @@ class AudioController {
 
   seek(ratio) {
     haptics.trigger('light');
-    const track = this.getCurrentTrack();
-    this.currentTime = Math.floor(Math.max(0, Math.min(1, ratio)) * track.duration);
+    const clamped = Math.max(0, Math.min(1, ratio));
+    const targetTime = clamped * this.duration;
+
+    if (this.audio && this.audio.duration) {
+      this.audio.currentTime = targetTime;
+    }
+    this.currentTime = Math.floor(targetTime);
     this.notifyProgress();
+    this.checkLyricsSync();
+  }
+
+  // --- Synced Lyrics Support ---
+  async loadLyrics(track) {
+    try {
+      const res = await fetch(apiUrl(`/api/lyrics?title=${encodeURIComponent(track.title)}&artist=${encodeURIComponent(track.artist)}&duration=${track.duration}`));
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.synced && Array.isArray(json.data.lines)) {
+          this.syncedLyrics = json.data.lines;
+          window.dispatchEvent(new CustomEvent('musii:lyrics-loaded', { detail: { lines: this.syncedLyrics } }));
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // Fallback: simple snippet
+    this.syncedLyrics = [
+      { time: 0, text: track.lyricsSnippet || track.lyrics_snippet || `Playing ${track.title} by ${track.artist}` }
+    ];
+    window.dispatchEvent(new CustomEvent('musii:lyrics-loaded', { detail: { lines: this.syncedLyrics } }));
+  }
+
+  checkLyricsSync() {
+    if (!this.syncedLyrics || this.syncedLyrics.length === 0) return;
+
+    let activeIdx = -1;
+    for (let i = 0; i < this.syncedLyrics.length; i++) {
+      if (this.currentTime >= this.syncedLyrics[i].time) {
+        activeIdx = i;
+      } else {
+        break;
+      }
+    }
+
+    if (activeIdx !== this.currentLyricIdx && activeIdx >= 0) {
+      this.currentLyricIdx = activeIdx;
+      window.dispatchEvent(new CustomEvent('musii:lyric-change', {
+        detail: {
+          index: activeIdx,
+          line: this.syncedLyrics[activeIdx]
+        }
+      }));
+    }
   }
 
   subscribe(listener) {
@@ -109,16 +236,17 @@ class AudioController {
 
   notify() {
     const track = this.getCurrentTrack();
-    this.listeners.forEach(fn => fn({ track, isPlaying: this.isPlaying, currentTime: this.currentTime }));
+    this.listeners.forEach(fn => fn({ track, isPlaying: this.isPlaying, currentTime: this.currentTime, duration: this.duration }));
   }
 
   notifyProgress() {
     const track = this.getCurrentTrack();
+    const duration = this.duration || track.duration || 1;
     const progressEvent = new CustomEvent('musii:progress', {
       detail: {
         currentTime: this.currentTime,
-        duration: track.duration,
-        ratio: this.currentTime / track.duration,
+        duration,
+        ratio: Math.min(1, this.currentTime / duration),
         timeFormatted: this.formatTime(this.currentTime)
       }
     });
@@ -127,4 +255,3 @@ class AudioController {
 }
 
 export const audioController = new AudioController();
-

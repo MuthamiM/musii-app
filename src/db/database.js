@@ -15,7 +15,7 @@ db.pragma('synchronous = NORMAL');
 db.pragma('foreign_keys = ON');
 db.pragma('cache_size = -64000');
 
-function initSchema() {
+function initTables() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS tracks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,6 +40,7 @@ function initSchema() {
       gradient TEXT NOT NULL,
       badge TEXT NOT NULL,
       pattern TEXT NOT NULL,
+      image TEXT DEFAULT '',
       FOREIGN KEY (track_id) REFERENCES tracks(id)
     );
 
@@ -114,9 +115,39 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_tracks_category ON tracks(category);
     CREATE INDEX IF NOT EXISTS idx_play_history_played_at ON play_history(played_at DESC);
   `);
+}
 
-  const trackCount = db.prepare('SELECT COUNT(*) as count FROM tracks').get().count;
-  if (trackCount === 0) {
+function initSchema() {
+  initTables();
+
+  let needsSeed = false;
+  try {
+    const trackCount = db.prepare('SELECT COUNT(*) as count FROM tracks').get().count;
+    if (trackCount === 0) {
+      needsSeed = true;
+    } else {
+      const firstTrack = db.prepare('SELECT cover_art FROM tracks LIMIT 1').get();
+      if (!firstTrack || !firstTrack.cover_art || !firstTrack.cover_art.startsWith('http')) {
+        needsSeed = true;
+      }
+    }
+  } catch (e) {
+    needsSeed = true;
+  }
+
+  if (needsSeed) {
+    db.exec(`
+      PRAGMA foreign_keys = OFF;
+      DROP TABLE IF EXISTS picks;
+      DROP TABLE IF EXISTS playlist_tracks;
+      DROP TABLE IF EXISTS play_history;
+      DROP TABLE IF EXISTS cached_songs;
+      DROP TABLE IF EXISTS tracks;
+      DROP TABLE IF EXISTS playlists;
+      DROP TABLE IF EXISTS user_profile;
+      PRAGMA foreign_keys = ON;
+    `);
+    initTables();
     seedDatabase();
   }
 }
@@ -128,11 +159,18 @@ function seedDatabase() {
   `);
 
   const initialTracks = [
-    ['Ume Tabasamu', 'Wakadinali', 'Victims of Madness', 214, 220, 'linear-gradient(135deg, #f0443a 0%, #a80f2a 100%)', 'Mood Mix', 'victims-of-madness', 'Looking at the city lights glowing through the dark skyline', 420],
-    ['Yellow', 'Coldplay', 'Parachutes', 269, 261.63, 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', 'Top Picks for You', 'parachutes-yellow', 'Look how they shine for you / And everything you do / Yeah they were all yellow', 890],
-    ['Midnight Run', 'Nova Lane', 'Late Night Drive', 198, 196, 'linear-gradient(135deg, #e8508f 0%, #9c2670 100%)', 'Mood Mix', 'late-night-drive', 'Cruising down empty highways beneath neon raindrops', 340],
-    ['Deep Work', 'Kito', 'Focus Flow', 245, 174.61, 'linear-gradient(135deg, #5b6cff 0%, #2a2f9e 100%)', 'Focus', 'deep-work', 'Binaural harmonic waves for intense deep creative flow', 512],
-    ['Neon Rain', 'Static Bloom', 'Cyber Horizon', 210, 293.66, 'linear-gradient(135deg, #16a58c 0%, #0a5e5a 100%)', 'Chill', 'cyber-horizon', 'Reflections dancing on the wet asphalt in the midnight fog', 275]
+    ['Make No Sense', 'YoungBoy Never Broke Again', 'AI YoungBoy 2', 148, 220.0, 'linear-gradient(135deg, #e63946 0%, #1e1b4b 100%)', 'AI YoungBoy 2', 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg', 'I feel like I am Gucci Mane in 2006 / All these diamonds on my neck', 1250],
+    ['Lonely Child', 'YoungBoy Never Broke Again', 'AI YoungBoy 2', 217, 196.0, 'linear-gradient(135deg, #1f1f2e 0%, #111118 100%)', 'AI YoungBoy 2', 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg', 'I miss my grandmother, wish that I could hug you / Wish that I could tell you that I love you', 980],
+    ['Hot Now', 'YoungBoy Never Broke Again', 'AI YoungBoy 2', 128, 261.63, 'linear-gradient(135deg, #ee7a2b 0%, #9c2670 100%)', 'AI YoungBoy 2', 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg', 'Ain not no running, we got 30s in this car / We gon do this in the dark', 870],
+    ['Ranada', 'YoungBoy Never Broke Again', 'AI YoungBoy 2', 176, 174.61, 'linear-gradient(135deg, #5b6cff 0%, #2a2f9e 100%)', 'AI YoungBoy 2', 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg', 'I was sitting in my cell, had my head down / Now I am on the road getting checks now', 920],
+    ['Natural Mystic', 'Bob Marley & The Wailers', 'Exodus', 206, 130.81, 'linear-gradient(135deg, #10b981 0%, #047857 100%)', 'Reggae Classics', 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f3/5a/67/f35a67ae-de94-1e98-8f3e-ab73358f9092/06UMGIM10554.rgb.jpg/600x600bb.jpg', 'There is a natural mystic blowing through the air / If you listen carefully now you will hear', 1100],
+    ['Around the World (La La La La)', 'A Touch of Class', 'Planet Pop', 214, 293.66, 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 'Eurodance', 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/c2/a2/38/c2a2384d-8c55-8180-53ed-88b152f82db4/743217932756.jpg/600x600bb.jpg', 'La la la la la, it goes around the world / Just la la la la la, it is all around the world', 840],
+    ['Walking On A Dream', 'Empire of the Sun', 'Walking On A Dream', 198, 246.94, 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', 'Electronic Indie', 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3e/42/a7/3e42a78d-57a3-fd69-6703-14d51205dd4c/13UMGIM24968.rgb.jpg/600x600bb.jpg', 'We are always running for the thrill of it / Thrill of it, always pushing up the hill of it', 760],
+    ['Ume Tii', 'Wakadinali', 'Victims of Madness', 210, 220.0, 'linear-gradient(135deg, #f0443a 0%, #a80f2a 100%)', 'Drill & Hip-Hop', 'https://i.ytimg.com/vi/fxIv96Ein7c/hqdefault.jpg', 'Rong Rende Victims of Madness Wakadinali flow', 1450],
+    ['Yellow', 'Coldplay', 'Parachutes', 269, 261.63, 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', 'Top Picks for You', 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/600x600bb.jpg', 'Look how they shine for you / And everything you do / Yeah, they were all yellow', 1890],
+    ['Naksh Naksh', 'Ali Kiba', 'Naksh Naksh', 317, 196.0, 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)', 'Bongo Flava', 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/12/1f/93/121f9359-f134-8d0d-887d-ef61ac31a280/859741415228_cover.jpg/600x600bb.jpg', 'Naksh naksh urembo wako mrembo wangu', 650],
+    ['Mile High Club', 'Vybz Kartel', 'King of the Dancehall', 164, 174.61, 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', 'Dancehall', 'https://is1-ssl.mzstatic.com/image/thumb/Music62/v4/cb/87/fb/cb87fb96-c983-e481-5d7e-9e5e1699b9dd/889326493617.jpg/600x600bb.jpg', 'Mile high club in the sky so high up above', 590],
+    ['Goth', 'Sidewalks and Skeletons', 'White Light', 207, 220.0, 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', 'Witch House', 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4a/cb/ae/4acbae53-2ca7-194f-2595-a1ec80d7b4d4/889211443277.jpg/600x600bb.jpg', 'Dark reverberations and haunted electronic synth waves', 720]
   ];
 
   const seedTransaction = db.transaction(() => {
@@ -141,13 +179,81 @@ function seedDatabase() {
     }
 
     const insertPick = db.prepare(`
-      INSERT INTO picks (id, category, title, subtitle, track_id, gradient, badge, pattern)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO picks (id, category, title, subtitle, track_id, gradient, badge, pattern, image)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    insertPick.run('pick-1', 'Mood Mix', 'Heart Break Melodies', 'Late Night Drive - 24 songs', 1, 'linear-gradient(135deg, #e63946 0%, #9b111e 100%)', 'Heart Break', 'dashed-heart');
-    insertPick.run('pick-2', 'Top Picks for You', 'Golden Sunset Vibes', 'Coldplay and Friends - 36 songs', 2, 'linear-gradient(135deg, #ee7a2b 0%, #9c2670 100%)', 'Trending Now', 'chevron-mesh');
-    insertPick.run('pick-3', 'Focus', 'Deep Work Binaural', 'Zero Distraction - 40 songs', 4, 'linear-gradient(135deg, #5b6cff 0%, #1e1b4b 100%)', 'Focus', 'radial-pulse');
+    insertPick.run(
+      'pick-youngboy-ai2',
+      'Featured Album',
+      'AI YoungBoy 2',
+      'YoungBoy Never Broke Again • 18 tracks',
+      1,
+      'linear-gradient(135deg, rgba(230,57,70,0.7), rgba(20,20,28,0.95))',
+      'AI YoungBoy 2',
+      'dashed-heart',
+      'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'
+    );
+
+    insertPick.run(
+      'pick-natural-mystic',
+      'Reggae Classic',
+      'Natural Mystic',
+      'Bob Marley & The Wailers • Exodus',
+      5,
+      'linear-gradient(135deg, rgba(16,185,129,0.7), rgba(20,20,28,0.95))',
+      'Bob Marley',
+      'chevron-mesh',
+      'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f3/5a/67/f35a67ae-de94-1e98-8f3e-ab73358f9092/06UMGIM10554.rgb.jpg/600x600bb.jpg'
+    );
+
+    insertPick.run(
+      'pick-around-the-world',
+      'Eurodance Anthem',
+      'Around the World',
+      'A Touch of Class • Planet Pop',
+      6,
+      'linear-gradient(135deg, rgba(59,130,246,0.7), rgba(20,20,28,0.95))',
+      'ATC',
+      'radial-pulse',
+      'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/c2/a2/38/c2a2384d-8c55-8180-53ed-88b152f82db4/743217932756.jpg/600x600bb.jpg'
+    );
+
+    insertPick.run(
+      'pick-walking-on-a-dream',
+      'Electronic Indie',
+      'Walking On A Dream',
+      'Empire of the Sun • High Roller',
+      7,
+      'linear-gradient(135deg, rgba(139,92,246,0.7), rgba(20,20,28,0.95))',
+      'Empire of the Sun',
+      'chevron-mesh',
+      'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3e/42/a7/3e42a78d-57a3-fd69-6703-14d51205dd4c/13UMGIM24968.rgb.jpg/600x600bb.jpg'
+    );
+
+    insertPick.run(
+      'pick-yellow',
+      'Top Picks for You',
+      'Golden Sunset Vibes',
+      'Coldplay • Parachutes • Yellow',
+      9,
+      'linear-gradient(135deg, rgba(245,158,11,0.7), rgba(20,20,28,0.95))',
+      'Coldplay',
+      'chevron-mesh',
+      'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/600x600bb.jpg'
+    );
+
+    insertPick.run(
+      'pick-wakadinali',
+      'Mood Mix',
+      'Victims of Madness',
+      'Wakadinali • Ume Tii • Drill',
+      8,
+      'linear-gradient(135deg, rgba(240,68,58,0.7), rgba(20,20,28,0.95))',
+      'Wakadinali',
+      'radial-pulse',
+      'https://i.ytimg.com/vi/fxIv96Ein7c/hqdefault.jpg'
+    );
 
     const insertPlaylist = db.prepare(`
       INSERT INTO playlists (id, name, song_count, is_favorite, is_cache_playlist, gradient)
@@ -155,8 +261,8 @@ function seedDatabase() {
     `);
 
     insertPlaylist.run('pl-liked', 'Liked Songs', 128, 1, 0, 'linear-gradient(135deg, #f0443a 0%, #a80f2a 100%)');
-    insertPlaylist.run('pl-road', 'Road Trip Highs', 36, 0, 0, 'linear-gradient(135deg, #ee7a2b 0%, #b8420f 100%)');
-    insertPlaylist.run('pl-focus', 'Deep Focus Studio', 52, 0, 0, 'linear-gradient(135deg, #5b6cff 0%, #2a2f9e 100%)');
+    insertPlaylist.run('pl-road', 'AI YoungBoy 2 Session', 18, 0, 0, 'linear-gradient(135deg, #e63946 0%, #1e1b4b 100%)');
+    insertPlaylist.run('pl-focus', 'Late Night Flow', 36, 0, 0, 'linear-gradient(135deg, #5b6cff 0%, #2a2f9e 100%)');
 
     const insertUser = db.prepare(`
       INSERT INTO user_profile (id, name, handle, avatar_initial, playlists_count, following_count, plays_count, haptics_enabled, auto_cache_enabled, glass_sheen_level, audio_codec, version)
@@ -165,12 +271,12 @@ function seedDatabase() {
 
     insertUser.run('usr-1', 'MUSII Member', '@musii_user', 'MU', 18, 342, '5.8k', 1, 1, 'high', 'Lossless 24-bit 96kHz', '1.9.1');
 
-    // Pre-seed 1 cached song
+    // Pre-seed cached songs with real AI YoungBoy 2 track
     const insertCache = db.prepare(`
       INSERT OR REPLACE INTO cached_songs (track_id, title, artist, album, duration, gradient, file_size_mb)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    insertCache.run(1, 'Ume Tabasamu', 'Wakadinali', 'Victims of Madness', 214, 'linear-gradient(135deg, #f0443a 0%, #a80f2a 100%)', 4.8);
+    insertCache.run(1, 'Make No Sense', 'YoungBoy Never Broke Again', 'AI YoungBoy 2', 148, 'linear-gradient(135deg, #e63946 0%, #1e1b4b 100%)', 3.8);
   });
 
   seedTransaction();

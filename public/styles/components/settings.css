@@ -1,0 +1,166 @@
+/* Settings View & Switch Controls */
+.settings-card-group {
+  background: var(--bg-surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(24px);
+  margin-bottom: 20px;
+}
+
+.settings-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: #ffffff;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.settings-card-group .settings-item-row:last-child {
+  border-bottom: none;
+}
+
+.settings-item-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.settings-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.settings-icon-circle svg {
+  width: 18px;
+  height: 18px;
+  stroke: #ffffff;
+  fill: none;
+  stroke-width: 2;
+}
+
+.settings-item-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.settings-item-subtitle {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.settings-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Green iOS / Android Toggle Switch */
+.ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.ios-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ios-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.16);
+  transition: 0.3s;
+  border-radius: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ios-slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.ios-switch input:checked + .ios-slider {
+  background-color: #34c759;
+}
+
+.ios-switch input:checked + .ios-slider:before {
+  transform: translateX(20px);
+}
+
+/* Badge tags */
+.settings-in-use-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.04em;
+}
+
+/* Synced Lyrics Highlighting */
+.synced-lyrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 8px 4px;
+}
+
+.synced-lyric-item {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.38);
+  transition: color 0.25s, transform 0.25s, font-size 0.25s;
+  line-height: 1.4;
+}
+
+.synced-lyric-item.is-active {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 17px;
+  transform: scale(1.03);
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+}
+
