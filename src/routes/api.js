@@ -10,12 +10,14 @@ const spotifyRoutes = require('./spotifyRoutes');
 const lyricsRoutes = require('./lyricsRoutes');
 const edgeRouter = require('../services/edgeRouter');
 
+const env = require('../config/env');
+
 // API status & healthcheck endpoint (strictly NO emojis)
 router.get('/health', (req, res) => {
   res.status(200).json({
     status: 'online',
     appName: 'MUSII',
-    version: '1.9.1',
+    version: env.VERSION,
     engine: 'Liquid-Glass-Ultra',
     edgeNodesOnline: edgeRouter.getAllNodes().length,
     timestamp: new Date().toISOString()
