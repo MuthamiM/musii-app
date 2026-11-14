@@ -62,3 +62,4 @@ class EdgeRouter {
 }
 
 module.exports = new EdgeRouter();
+

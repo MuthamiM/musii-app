@@ -43,3 +43,4 @@ function createEdgeServer(port, regionName) {
 }
 
 module.exports = { createEdgeServer };
+

@@ -2,11 +2,15 @@ import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
 import { DEFAULT_PLAYLISTS } from '../constants/tracks.js';
 import { GRADIENTS } from '../constants/colors.js';
+import { apiUrl } from '../constants/api.js';
 
 class PlaylistController {
   constructor() {
     this.playlists = DEFAULT_PLAYLISTS;
+    this.cachedSongs = [];
     this.container = null;
+    this.autoCacheEnabled = true;
+    this.contextTrackIdx = null;
   }
 
   init() {
@@ -14,26 +18,71 @@ class PlaylistController {
     const newBtn = document.getElementById('btnCreatePlaylist');
 
     if (newBtn) {
-      newBtn.addEventListener('click', () => this.promptCreate());
+      newBtn.addEventListener('click', () => this.openCreateModal());
     }
 
+    this.initCreateModal();
+    this.initContextMenu();
+    this.initCacheSettings();
     this.render();
+    this.loadCachedSongs();
+
+    window.addEventListener('musii:track-played', () => {
+      if (this.autoCacheEnabled) {
+        this.loadCachedSongs();
+      }
+    });
   }
 
-  setPlaylists(playlists) {
-    if (playlists && playlists.length > 0) {
-      this.playlists = playlists;
-      this.render();
+  // --- Create Playlist Modal ---
+  initCreateModal() {
+    const modal = document.getElementById('createPlaylistModal');
+    const input = document.getElementById('inputPlaylistName');
+    const btnConfirm = document.getElementById('btnConfirmCreatePlaylist');
+    const btnCancel = document.getElementById('btnCancelCreatePlaylist');
+
+    if (btnConfirm) {
+      btnConfirm.addEventListener('click', () => this.confirmCreate());
+    }
+    if (btnCancel) {
+      btnCancel.addEventListener('click', () => this.closeCreateModal());
+    }
+    if (modal) {
+      modal.addEventListener('click', e => {
+        if (e.target === modal) this.closeCreateModal();
+      });
+    }
+    if (input) {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') this.confirmCreate();
+      });
     }
   }
 
-  async promptCreate() {
+  openCreateModal() {
     haptics.trigger('medium');
+    const modal = document.getElementById('createPlaylistModal');
+    const input = document.getElementById('inputPlaylistName');
+    if (modal) modal.classList.add('is-open');
+    if (input) {
+      input.value = '';
+      setTimeout(() => input.focus(), 200);
+    }
+  }
+
+  closeCreateModal() {
+    const modal = document.getElementById('createPlaylistModal');
+    if (modal) modal.classList.remove('is-open');
+  }
+
+  async confirmCreate() {
+    const input = document.getElementById('inputPlaylistName');
+    const rawName = input ? input.value.trim() : '';
     const count = this.playlists.length + 1;
-    const name = `Vibe Session #${count}`;
+    const name = rawName || `Vibe Session #${count}`;
 
     try {
-      const res = await fetch('/api/playlists', {
+      const res = await fetch(apiUrl('/api/playlists'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -56,7 +105,192 @@ class PlaylistController {
 
     haptics.trigger('heavy');
     errorHandler.showToast(`Created "${name}"`);
+    this.closeCreateModal();
     this.render();
+  }
+
+  // --- Track Context Menu (Add to Playlist) ---
+  initContextMenu() {
+    const menu = document.getElementById('trackContextMenu');
+
+    document.addEventListener('click', () => {
+      if (menu) menu.style.display = 'none';
+    });
+
+    document.addEventListener('contextmenu', e => {
+      const row = e.target.closest('.track-row');
+      if (!row) return;
+      e.preventDefault();
+
+      this.contextTrackIdx = parseInt(row.dataset.idx, 10);
+      this.showContextMenu(e.clientX, e.clientY);
+    });
+
+    // Long-press for mobile
+    let pressTimer = null;
+    document.addEventListener('touchstart', e => {
+      const row = e.target.closest('.track-row');
+      if (!row) return;
+      pressTimer = setTimeout(() => {
+        this.contextTrackIdx = parseInt(row.dataset.idx, 10);
+        const touch = e.touches[0];
+        this.showContextMenu(touch.clientX, touch.clientY);
+      }, 500);
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      if (pressTimer) clearTimeout(pressTimer);
+    }, { passive: true });
+
+    document.addEventListener('touchmove', () => {
+      if (pressTimer) clearTimeout(pressTimer);
+    }, { passive: true });
+  }
+
+  showContextMenu(x, y) {
+    const menu = document.getElementById('trackContextMenu');
+    const list = document.getElementById('contextMenuPlaylistList');
+    if (!menu || !list) return;
+
+    list.innerHTML = this.playlists.map(pl => `
+      <button data-pl-id="${pl.id}" style="display:flex; align-items:center; gap:10px; width:100%; padding:12px 18px; text-align:left; font-size:14px; color:#fff; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke:#fff; flex-shrink:0;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        ${pl.name}
+      </button>
+    `).join('');
+
+    list.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const plId = btn.dataset.plId;
+        await this.addTrackToPlaylist(plId, this.contextTrackIdx);
+        menu.style.display = 'none';
+      });
+    });
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let posX = Math.min(x, vw - 220);
+    let posY = Math.min(y, vh - 200);
+    posX = Math.max(8, posX);
+    posY = Math.max(8, posY);
+
+    menu.style.left = posX + 'px';
+    menu.style.top = posY + 'px';
+    menu.style.display = 'block';
+    haptics.trigger('medium');
+  }
+
+  async addTrackToPlaylist(playlistId, trackIdx) {
+    haptics.trigger('heavy');
+    const pl = this.playlists.find(p => String(p.id) === String(playlistId));
+    const plName = pl ? pl.name : 'Playlist';
+
+    try {
+      await fetch(apiUrl(`/api/playlists/${playlistId}/tracks`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackIndex: trackIdx })
+      });
+    } catch (e) {}
+
+    if (pl) {
+      pl.song_count = (pl.song_count || 0) + 1;
+      this.render();
+    }
+    errorHandler.showToast(`Added to "${plName}"`);
+  }
+
+  // --- Cache Settings ---
+  initCacheSettings() {
+    const btnAutoCache = document.getElementById('btnToggleAutoCache');
+    const btnClear = document.getElementById('btnClearCache');
+
+    if (btnAutoCache) {
+      btnAutoCache.addEventListener('click', () => {
+        this.autoCacheEnabled = !this.autoCacheEnabled;
+        const tag = document.getElementById('tagAutoCacheStatus');
+        if (tag) {
+          tag.textContent = this.autoCacheEnabled ? 'Enabled' : 'Disabled';
+          tag.style.color = this.autoCacheEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)';
+        }
+        haptics.trigger('medium');
+        errorHandler.showToast(this.autoCacheEnabled ? 'Auto-cache enabled' : 'Auto-cache disabled');
+      });
+    }
+
+    if (btnClear) {
+      btnClear.addEventListener('click', async () => {
+        haptics.trigger('heavy');
+        try {
+          await fetch(apiUrl('/api/music/cached'), { method: 'DELETE' });
+        } catch (e) {}
+        this.cachedSongs = [];
+        this.renderCachedSongs();
+        errorHandler.showToast('Audio cache cleared');
+      });
+    }
+  }
+
+  // --- Cached Songs ---
+  async loadCachedSongs() {
+    try {
+      const res = await fetch(apiUrl('/api/music/cached'));
+      if (res.ok) {
+        const json = await res.json();
+        this.cachedSongs = json.data || [];
+      }
+    } catch (e) {
+      this.cachedSongs = [];
+    }
+    this.renderCachedSongs();
+  }
+
+  renderCachedSongs() {
+    const container = document.getElementById('cachedSongsList');
+    const label = document.getElementById('labelCacheCount');
+    const sizeTag = document.getElementById('tagCacheSize');
+
+    if (label) {
+      label.textContent = `${this.cachedSongs.length} tracks`;
+    }
+
+    const totalMb = this.cachedSongs.reduce((sum, s) => sum + (s.file_size_mb || 0), 0);
+    if (sizeTag) {
+      sizeTag.textContent = `${totalMb.toFixed(1)} MB`;
+    }
+
+    if (!container) return;
+
+    if (this.cachedSongs.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:28px 0; color:var(--text-muted); font-size:13px;">
+          No cached songs yet. Play a track to auto-cache it.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = this.cachedSongs.map((song, i) => `
+      <div class="track-row touch-spring" style="opacity:0.85;">
+        <div class="track-avatar" style="--card-grad: ${song.gradient || 'linear-gradient(135deg,#6366f1,#a855f7)'};">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </div>
+        <div class="track-meta">
+          <span class="track-name">${song.title}</span>
+          <span class="track-artist">${song.artist} -- ${song.file_size_mb || '?'} MB</span>
+        </div>
+        <div style="font-size:11px; padding:4px 8px; border-radius:999px; background:rgba(6,182,212,0.12); color:var(--accent-cyan); font-weight:600;">
+          Cached
+        </div>
+      </div>
+    `).join('');
+  }
+
+  setPlaylists(playlists) {
+    if (playlists && playlists.length > 0) {
+      this.playlists = playlists;
+      this.render();
+    }
   }
 
   render() {

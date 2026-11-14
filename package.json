@@ -1,7 +1,7 @@
 {
-  "name": "bitchord-app",
-  "version": "1.9.1",
-  "description": "BitChord - Minimalist Liquid Glass Music App with better-sqlite3 Backend",
+  "name": "musii-app",
+  "version": "2.0.0",
+  "description": "MUSII - Minimalist Liquid Glass Music App with better-sqlite3 Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -2,9 +2,11 @@ import { audioController } from './AudioController.js';
 import { navigationController } from './NavigationController.js';
 import { playlistController } from './PlaylistController.js';
 import { modalController } from './ModalController.js';
+import { authController } from './AuthController.js';
 import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
 import { DEFAULT_TRACKS, DEFAULT_PICKS } from '../constants/tracks.js';
+import { apiUrl } from '../constants/api.js';
 
 class AppController {
   constructor() {
@@ -16,6 +18,7 @@ class AppController {
     navigationController.init();
     playlistController.init();
     modalController.init();
+    await authController.init();
 
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       try {
@@ -33,7 +36,7 @@ class AppController {
 
   async loadInitialData() {
     try {
-      const res = await fetch('/api/music/feed');
+      const res = await fetch(apiUrl('/api/music/feed'));
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.allTracks) {
@@ -49,7 +52,7 @@ class AppController {
 
   async fetchEdgeNodes() {
     try {
-      const res = await fetch('/api/edge/nodes');
+      const res = await fetch(apiUrl('/api/edge/nodes'));
       if (res.ok) {
         const json = await res.json();
         const optimal = json.data && json.data.optimalNode;
@@ -144,7 +147,7 @@ class AppController {
       });
     });
 
-    window.addEventListener('bitchord:progress', e => {
+    window.addEventListener('musii:progress', e => {
       const { timeFormatted, ratio } = e.detail;
       const pct = Math.min(100, ratio * 100);
 

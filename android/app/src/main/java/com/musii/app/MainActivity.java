@@ -1,4 +1,4 @@
-package com.bitchord.app;
+package com.musii.app;
 
 import com.getcapacitor.BridgeActivity;
 

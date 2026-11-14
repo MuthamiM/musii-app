@@ -1,0 +1,284 @@
+import { haptics } from '../middleware/hapticMiddleware.js';
+import { errorHandler } from '../errors/clientErrorHandler.js';
+import { audioController } from './AudioController.js';
+import { apiUrl } from '../constants/api.js';
+
+class AuthController {
+  constructor() {
+    this.overlay = null;
+    this.stepEmail = null;
+    this.stepCode = null;
+    this.inputEmail = null;
+    this.inputCode = null;
+    this.currentEmail = '';
+    this.token = localStorage.getItem('musii_token') || null;
+  }
+
+  async init() {
+    this.overlay = document.getElementById('authOverlay');
+    this.stepEmail = document.getElementById('authStepEmail');
+    this.stepCode = document.getElementById('authStepCode');
+    this.inputEmail = document.getElementById('authInputEmail');
+    this.inputCode = document.getElementById('authInputCode');
+
+    this.bindEvents();
+
+    // Check existing session
+    if (this.token) {
+      await this.validateSession();
+    } else {
+      this.showAuth();
+    }
+  }
+
+  bindEvents() {
+    const btnSend = document.getElementById('btnAuthSendCode');
+    const btnVerify = document.getElementById('btnAuthVerify');
+    const btnResend = document.getElementById('btnAuthResend');
+    const btnChangeEmail = document.getElementById('btnAuthChangeEmail');
+    const btnSignOut = document.getElementById('btnProfileSignOut');
+
+    if (btnSend) {
+      btnSend.addEventListener('click', () => this.handleSendCode());
+    }
+
+    if (this.inputEmail) {
+      this.inputEmail.addEventListener('keydown', e => {
+        if (e.key === 'Enter') this.handleSendCode();
+      });
+    }
+
+    if (btnVerify) {
+      btnVerify.addEventListener('click', () => this.handleVerifyCode());
+    }
+
+    if (this.inputCode) {
+      this.inputCode.addEventListener('keydown', e => {
+        if (e.key === 'Enter') this.handleVerifyCode();
+      });
+      // Auto-submit when 6 digits are typed
+      this.inputCode.addEventListener('input', e => {
+        if (this.inputCode.value.trim().length === 6) {
+          this.handleVerifyCode();
+        }
+      });
+    }
+
+    if (btnResend) {
+      btnResend.addEventListener('click', () => this.handleResendCode());
+    }
+
+    if (btnChangeEmail) {
+      btnChangeEmail.addEventListener('click', () => this.showEmailStep());
+    }
+
+    if (btnSignOut) {
+      btnSignOut.addEventListener('click', () => this.signOut());
+    }
+  }
+
+  showAuth() {
+    if (this.overlay) {
+      this.overlay.classList.remove('auth-hidden');
+    }
+    this.showEmailStep();
+  }
+
+  hideAuth() {
+    if (this.overlay) {
+      this.overlay.classList.add('auth-hidden');
+    }
+  }
+
+  showEmailStep() {
+    if (this.stepEmail) this.stepEmail.classList.add('active');
+    if (this.stepCode) this.stepCode.classList.remove('active');
+    if (this.inputEmail) {
+      setTimeout(() => this.inputEmail.focus(), 150);
+    }
+  }
+
+  showCodeStep(email) {
+    this.currentEmail = email;
+    if (this.stepEmail) this.stepEmail.classList.remove('active');
+    if (this.stepCode) this.stepCode.classList.add('active');
+    
+    const badge = document.getElementById('authTargetEmail');
+    if (badge) badge.textContent = email;
+
+    if (this.inputCode) {
+      this.inputCode.value = '';
+      setTimeout(() => this.inputCode.focus(), 150);
+    }
+  }
+
+  async handleSendCode() {
+    const email = this.inputEmail ? this.inputEmail.value.trim() : '';
+    if (!email || !email.includes('@')) {
+      haptics.trigger('heavy');
+      errorHandler.showToast('Please enter a valid email address');
+      return;
+    }
+
+    const btn = document.getElementById('btnAuthSendCode');
+    if (btn) btn.disabled = true;
+
+    haptics.trigger('medium');
+
+    try {
+      const res = await fetch(apiUrl('/api/auth/send-code'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        errorHandler.showToast('Verification code sent to your email');
+        this.showCodeStep(email);
+      } else {
+        throw new Error(data.error?.message || 'Failed to send code');
+      }
+    } catch (err) {
+      haptics.trigger('heavy');
+      errorHandler.showToast(err.message || 'Error sending code');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async handleResendCode() {
+    if (!this.currentEmail) return;
+    haptics.trigger('medium');
+
+    try {
+      const res = await fetch(apiUrl('/api/auth/send-code'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.currentEmail })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        errorHandler.showToast('New code sent to ' + this.currentEmail);
+      } else {
+        throw new Error(data.error?.message || 'Failed to resend');
+      }
+    } catch (err) {
+      errorHandler.showToast(err.message || 'Resend failed');
+    }
+  }
+
+  async handleVerifyCode() {
+    const code = this.inputCode ? this.inputCode.value.trim() : '';
+    if (!code || code.length < 6) {
+      haptics.trigger('heavy');
+      errorHandler.showToast('Please enter the 6-digit code');
+      return;
+    }
+
+    const btn = document.getElementById('btnAuthVerify');
+    if (btn) btn.disabled = true;
+
+    haptics.trigger('medium');
+
+    try {
+      const res = await fetch(apiUrl('/api/auth/verify-code'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.currentEmail, code })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        this.token = data.data.token;
+        localStorage.setItem('musii_token', this.token);
+        localStorage.setItem('musii_user', JSON.stringify(data.data.user));
+
+        this.updateProfileUI(data.data.user);
+        this.hideAuth();
+        haptics.trigger('heavy');
+        errorHandler.showToast(`Signed in as ${data.data.user.email}`);
+
+        // Start playing music
+        setTimeout(() => {
+          if (!audioController.isPlaying) {
+            audioController.play();
+          }
+        }, 500);
+      } else {
+        throw new Error(data.error?.message || 'Invalid code');
+      }
+    } catch (err) {
+      haptics.trigger('heavy');
+      errorHandler.showToast(err.message || 'Verification failed');
+      if (this.inputCode) this.inputCode.value = '';
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async validateSession() {
+    try {
+      const res = await fetch(apiUrl('/api/auth/session'), {
+        headers: { 'Authorization': `Bearer ${this.token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.data && data.data.valid) {
+        this.updateProfileUI(data.data.user);
+        this.hideAuth();
+      } else {
+        this.clearSession();
+        this.showAuth();
+      }
+    } catch (e) {
+      // Offline fallback: keep session if cached user exists
+      const cached = localStorage.getItem('musii_user');
+      if (cached) {
+        try {
+          this.updateProfileUI(JSON.parse(cached));
+          this.hideAuth();
+        } catch (err) {
+          this.showAuth();
+        }
+      } else {
+        this.showAuth();
+      }
+    }
+  }
+
+  updateProfileUI(user) {
+    if (!user) return;
+    const nameEl = document.getElementById('profileUserName');
+    const handleEl = document.getElementById('profileUserHandle');
+    const initialEl = document.getElementById('profileUserInitial');
+
+    if (nameEl) nameEl.textContent = user.name || 'MUSII Member';
+    if (handleEl) handleEl.textContent = `${user.handle || '@user'} • Audiophile Lossless`;
+    if (initialEl) initialEl.textContent = user.avatar_initial || 'M';
+  }
+
+  async signOut() {
+    haptics.trigger('heavy');
+    try {
+      await fetch(apiUrl('/api/auth/logout'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`
+        }
+      });
+    } catch (e) {}
+
+    this.clearSession();
+    this.showAuth();
+    errorHandler.showToast('Signed out');
+  }
+
+  clearSession() {
+    this.token = null;
+    localStorage.removeItem('musii_token');
+    localStorage.removeItem('musii_user');
+  }
+}
+
+export const authController = new AuthController();

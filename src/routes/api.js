@@ -4,6 +4,7 @@ const router = express.Router();
 const musicRoutes = require('./musicRoutes');
 const playlistRoutes = require('./playlistRoutes');
 const userRoutes = require('./userRoutes');
+const authRoutes = require('./authRoutes');
 const edgeRouter = require('../services/edgeRouter');
 
 // API status & healthcheck endpoint (strictly NO emojis)
@@ -32,5 +33,6 @@ router.get('/edge/nodes', (req, res) => {
 router.use('/music', musicRoutes);
 router.use('/playlists', playlistRoutes);
 router.use('/user', userRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;

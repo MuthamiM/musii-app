@@ -1,6 +1,7 @@
 import { audioSynth } from '../services/AudioSynthService.js';
 import { haptics } from '../middleware/hapticMiddleware.js';
 import { DEFAULT_TRACKS } from '../constants/tracks.js';
+import { apiUrl } from '../constants/api.js';
 
 class AudioController {
   constructor() {
@@ -33,6 +34,16 @@ class AudioController {
     const track = this.getCurrentTrack();
     this.isPlaying = true;
     audioSynth.playTrack(track);
+
+    // Record play on backend to increment play count and auto-cache
+    if (track && track.id) {
+      fetch(apiUrl(`/api/music/track/${track.id}/play`), { method: 'POST' })
+        .then(res => res.json())
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('musii:track-played', { detail: { track } }));
+        })
+        .catch(() => {});
+    }
 
     if (this.ticker) clearInterval(this.ticker);
     this.ticker = setInterval(() => {
@@ -103,7 +114,7 @@ class AudioController {
 
   notifyProgress() {
     const track = this.getCurrentTrack();
-    const progressEvent = new CustomEvent('bitchord:progress', {
+    const progressEvent = new CustomEvent('musii:progress', {
       detail: {
         currentTime: this.currentTime,
         duration: track.duration,

@@ -7,7 +7,7 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'bitchord.db');
+const dbPath = path.join(dataDir, 'musii.db');
 const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
@@ -95,6 +95,22 @@ function initSchema() {
       FOREIGN KEY (track_id) REFERENCES tracks(id)
     );
 
+    CREATE TABLE IF NOT EXISTS auth_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      code TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+      token TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_active DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email);
     CREATE INDEX IF NOT EXISTS idx_tracks_category ON tracks(category);
     CREATE INDEX IF NOT EXISTS idx_play_history_played_at ON play_history(played_at DESC);
   `);
