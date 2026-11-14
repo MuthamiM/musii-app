@@ -222,7 +222,7 @@ class SearchController {
       const res = await fetch(apiUrl(`/api/stream/search?q=${encodeURIComponent(query)}`));
       if (res.ok) {
         const json = await res.json();
-        const results = json.data && json.data.results ? json.data.results : [];
+        const results = Array.isArray(json.data) ? json.data : (json.data && json.data.results ? json.data.results : []);
         if (results.length === 0) {
           this.searchList.innerHTML = `
             <div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:14px;">
@@ -239,13 +239,30 @@ class SearchController {
               <span class="search-row-title">${item.title}</span>
               <span class="search-row-artist">${item.artist || 'Artist'}</span>
             </div>
-            <div style="color:var(--accent); font-size:13px; font-weight:600; padding:6px 10px;">
-              Play
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn-row-add-queue" title="Add to Queue" style="background:rgba(255,255,255,0.08); border:none; color:#fff; border-radius:50%; width:32px; height:32px; display:grid; place-items:center; cursor:pointer;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </button>
+              <div class="btn-row-play-now" style="color:var(--accent); font-size:13px; font-weight:600; padding:6px 8px; cursor:pointer;">
+                Play
+              </div>
             </div>
           </div>
         `).join('');
 
         this.searchList.querySelectorAll('.search-row-item').forEach(row => {
+          const btnQueue = row.querySelector('.btn-row-add-queue');
+          if (btnQueue) {
+            btnQueue.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const dataStr = row.getAttribute('data-play-item');
+              if (dataStr) {
+                const item = JSON.parse(dataStr);
+                audioController.addToQueue(item);
+              }
+            });
+          }
+
           row.addEventListener('click', () => {
             const dataStr = row.getAttribute('data-play-item');
             if (dataStr) {

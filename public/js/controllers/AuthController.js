@@ -27,8 +27,19 @@ class AuthController {
 
     // Check existing session
     if (this.token) {
-      await this.validateSession();
+      document.documentElement.classList.add('user-authenticated');
+      this.hideAuth();
+      const cached = localStorage.getItem('musii_user');
+      if (cached) {
+        try {
+          const user = JSON.parse(cached);
+          this.updateProfileUI(user);
+          window.dispatchEvent(new CustomEvent('musii:user-updated', { detail: { user } }));
+        } catch (e) {}
+      }
+      this.validateSession();
     } else {
+      document.documentElement.classList.remove('user-authenticated');
       this.showAuth();
     }
   }
@@ -91,6 +102,7 @@ class AuthController {
   }
 
   showAuth() {
+    document.documentElement.classList.remove('user-authenticated');
     if (this.overlay) {
       this.overlay.classList.remove('auth-hidden');
     }
@@ -98,6 +110,7 @@ class AuthController {
   }
 
   hideAuth() {
+    document.documentElement.classList.add('user-authenticated');
     if (this.overlay) {
       this.overlay.classList.add('auth-hidden');
     }
@@ -284,31 +297,22 @@ class AuthController {
   }
 
   async validateSession() {
+    if (!this.token) return;
     try {
       const res = await fetch(apiUrl('/api/auth/session'), {
         headers: { 'Authorization': `Bearer ${this.token}` }
       });
-      const data = await res.json();
-      if (res.ok && data.data && data.data.valid) {
-        this.updateProfileUI(data.data.user);
-        this.hideAuth();
-      } else {
-        this.clearSession();
-        this.showAuth();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.data && data.data.valid) {
+          this.updateProfileUI(data.data.user);
+          localStorage.setItem('musii_user', JSON.stringify(data.data.user));
+          window.dispatchEvent(new CustomEvent('musii:user-updated', { detail: { user: data.data.user } }));
+          this.hideAuth();
+        }
       }
     } catch (e) {
-      // Offline fallback: keep session if cached user exists
-      const cached = localStorage.getItem('musii_user');
-      if (cached) {
-        try {
-          this.updateProfileUI(JSON.parse(cached));
-          this.hideAuth();
-        } catch (err) {
-          this.showAuth();
-        }
-      } else {
-        this.showAuth();
-      }
+      console.warn('[AuthController] Session background check error (kept offline):', e);
     }
   }
 
@@ -335,15 +339,16 @@ class AuthController {
       });
     } catch (e) {}
 
+    document.documentElement.classList.remove('user-authenticated');
     this.clearSession();
     this.showAuth();
-    errorHandler.showToast('Signed out');
+    errorHandler.showToast('Signed out. Your playlists and history are saved.');
   }
 
   clearSession() {
     this.token = null;
     localStorage.removeItem('musii_token');
-    localStorage.removeItem('musii_user');
+    // Note: User profile, playlists, cache, and history are preserved in storage
   }
 }
 

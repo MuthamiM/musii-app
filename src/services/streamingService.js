@@ -13,7 +13,7 @@ class StreamingService {
       const found = execSync('which yt-dlp 2>/dev/null').toString().trim();
       if (found) return found;
     } catch (e) {}
-    return '/home/cantroll/.local/bin/yt-dlp';
+    return 'yt-dlp';
   }
 
   async getStreamUrl(query) {
@@ -28,18 +28,19 @@ class StreamingService {
     return new Promise((resolve, reject) => {
       // Use ytsearch if not a direct URL
       const target = query.startsWith('http') ? query : `ytsearch1:${query} audio`;
-      const cmd = `${this.ytDlpPath} -f "ba/b" -g --no-playlist "${target}"`;
+      const cmd = `${this.ytDlpPath} --no-warnings -f "ba/b" -g --no-playlist "${target}"`;
 
-      exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
+      exec(cmd, { timeout: 30000 }, (error, stdout, stderr) => {
         if (error) {
           console.error('[StreamingService] yt-dlp error:', error.message);
           return reject(new Error('Failed to resolve audio stream'));
         }
 
         const lines = stdout.trim().split('\n');
-        const streamUrl = lines[0] ? lines[0].trim() : null;
+        const streamUrl = lines.map(l => l.trim()).find(l => l.startsWith('http'));
 
-        if (!streamUrl || !streamUrl.startsWith('http')) {
+        if (!streamUrl) {
+          console.error('[StreamingService] No http URL in output:', stdout);
           return reject(new Error('No stream URL extracted'));
         }
 

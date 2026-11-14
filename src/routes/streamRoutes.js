@@ -30,6 +30,23 @@ router.get('/play', async (req, res, next) => {
   }
 });
 
+// Download audio stream as file attachment
+router.get('/download', async (req, res, next) => {
+  try {
+    const query = req.query.q || req.query.query;
+    if (!query) {
+      return res.status(400).send('Query parameter q is required');
+    }
+    const streamUrl = await streamingService.getStreamUrl(query);
+    const rawFilename = req.query.filename || `${query}.m4a`;
+    const cleanFilename = rawFilename.replace(/[/\\?%*:|"<>]/g, '').trim() || 'track.m4a';
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(cleanFilename)}"`);
+    res.redirect(302, streamUrl);
+  } catch (err) {
+    res.status(500).send('Download error: ' + err.message);
+  }
+});
+
 // Search YouTube tracks
 router.get('/search', async (req, res, next) => {
   try {

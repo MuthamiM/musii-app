@@ -9,8 +9,15 @@ const streamRoutes = require('./streamRoutes');
 const spotifyRoutes = require('./spotifyRoutes');
 const lyricsRoutes = require('./lyricsRoutes');
 const edgeRouter = require('../services/edgeRouter');
-
 const env = require('../config/env');
+
+// Disable caching on all API endpoints so clients never receive empty 304 bodies
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
 
 // API status & healthcheck endpoint (strictly NO emojis)
 router.get('/health', (req, res) => {

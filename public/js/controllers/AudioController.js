@@ -14,6 +14,7 @@ class AudioController {
     this.syncedLyrics = [];
     this.currentLyricIdx = -1;
     this.useDirectStream = true;
+    this.queue = [];
 
     // Native HTML5 Realtime Audio Element
     this.audio = new Audio();
@@ -37,9 +38,7 @@ class AudioController {
     });
 
     this.audio.addEventListener('error', (e) => {
-      console.warn('[AudioController] Stream error, falling back to Web Audio Synth:', e);
-      const track = this.getCurrentTrack();
-      audioSynth.playTrack(track);
+      console.warn('[AudioController] Stream error loading audio:', e);
     });
 
     this.audio.addEventListener('play', () => {
@@ -85,19 +84,15 @@ class AudioController {
         .catch(() => {});
     }
 
-    if (this.useDirectStream) {
-      const streamUrl = apiUrl(`/api/stream/play?q=${encodeURIComponent(track.artist + ' ' + track.title)}`);
-      if (this.audio.src !== streamUrl) {
-        this.audio.src = streamUrl;
-      }
-      try {
-        await this.audio.play();
-      } catch (err) {
-        // Fallback to synth if autoplay blocked or network offline
-        audioSynth.playTrack(track);
-      }
-    } else {
-      audioSynth.playTrack(track);
+    const streamQuery = encodeURIComponent(`${track.artist || ''} ${track.title || ''}`.trim());
+    const streamUrl = apiUrl(`/api/stream/play?q=${streamQuery}`);
+    if (this.audio.src !== streamUrl) {
+      this.audio.src = streamUrl;
+    }
+    try {
+      await this.audio.play();
+    } catch (err) {
+      console.warn('[AudioController] play failed:', err);
     }
 
     this.loadLyrics(track);
@@ -107,7 +102,6 @@ class AudioController {
   pause() {
     this.isPlaying = false;
     this.audio.pause();
-    audioSynth.stop();
     this.notify();
   }
 
@@ -165,12 +159,53 @@ class AudioController {
 
   next() {
     haptics.trigger('medium');
-    this.selectTrack(this.currentIdx + 1, true);
+    if (this.queue && this.queue.length > 0) {
+      const nextTrack = this.queue.shift();
+      this.notifyQueue();
+      this.playSong(nextTrack);
+    } else {
+      this.selectTrack(this.currentIdx + 1, true);
+    }
   }
 
   prev() {
     haptics.trigger('medium');
     this.selectTrack(this.currentIdx - 1, true);
+  }
+
+  addToQueue(track) {
+    haptics.trigger('medium');
+    this.queue.push(track);
+    this.notifyQueue();
+    window.dispatchEvent(new CustomEvent('musii:toast', { detail: { message: `Added "${track.title}" to queue` } }));
+  }
+
+  playNextInQueue(track) {
+    haptics.trigger('medium');
+    this.queue.unshift(track);
+    this.notifyQueue();
+    window.dispatchEvent(new CustomEvent('musii:toast', { detail: { message: `"${track.title}" will play next` } }));
+  }
+
+  removeFromQueue(index) {
+    haptics.trigger('light');
+    if (index >= 0 && index < this.queue.length) {
+      this.queue.splice(index, 1);
+      this.notifyQueue();
+    }
+  }
+
+  clearQueue() {
+    haptics.trigger('light');
+    this.queue = [];
+    this.notifyQueue();
+    window.dispatchEvent(new CustomEvent('musii:toast', { detail: { message: 'Queue cleared' } }));
+  }
+
+  notifyQueue() {
+    window.dispatchEvent(new CustomEvent('musii:queue-updated', {
+      detail: { queue: this.queue }
+    }));
   }
 
   seek(ratio) {
@@ -184,6 +219,35 @@ class AudioController {
     this.currentTime = Math.floor(targetTime);
     this.notifyProgress();
     this.checkLyricsSync();
+  }
+
+  seekTo(seconds) {
+    haptics.trigger('light');
+    if (this.audio && !isNaN(seconds)) {
+      this.audio.currentTime = Math.max(0, Math.min(this.duration, seconds));
+    }
+    this.currentTime = Math.floor(seconds);
+    this.notifyProgress();
+    this.checkLyricsSync();
+  }
+
+  downloadCurrentTrack() {
+    haptics.trigger('medium');
+    const track = this.getCurrentTrack();
+    if (!track) return;
+    const query = encodeURIComponent(`${track.artist} ${track.title}`.trim());
+    const filename = encodeURIComponent(`${track.artist} - ${track.title}.m4a`);
+    const downloadUrl = apiUrl(`/api/stream/download?q=${query}&filename=${filename}`);
+
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `${track.artist} - ${track.title}.m4a`;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    window.dispatchEvent(new CustomEvent('musii:toast', { detail: { message: `Downloading ${track.title}...` } }));
   }
 
   // --- Synced Lyrics Support ---
