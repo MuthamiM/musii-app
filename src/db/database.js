@@ -128,12 +128,36 @@ function initTables() {
       last_active DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS listening_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      track_id INTEGER,
+      title TEXT NOT NULL,
+      artist TEXT NOT NULL,
+      duration_listened INTEGER DEFAULT 0,
+      played_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS offline_tracks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      track_id INTEGER,
+      title TEXT NOT NULL,
+      artist TEXT NOT NULL,
+      album TEXT,
+      duration INTEGER DEFAULT 180,
+      cover_art TEXT,
+      stream_query TEXT NOT NULL,
+      file_size_bytes INTEGER DEFAULT 0,
+      cached_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_stream_cache_expires ON stream_cache(expires_at);
-    CREATE INDEX IF NOT EXISTS idx_user_accounts_email ON user_accounts(email);
     CREATE INDEX IF NOT EXISTS idx_user_accounts_email ON user_accounts(email);
     CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email);
     CREATE INDEX IF NOT EXISTS idx_tracks_category ON tracks(category);
     CREATE INDEX IF NOT EXISTS idx_play_history_played_at ON play_history(played_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_listening_history_played ON listening_history(played_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_listening_history_artist ON listening_history(artist);
+    CREATE INDEX IF NOT EXISTS idx_offline_tracks_query ON offline_tracks(stream_query);
   `);
 }
 

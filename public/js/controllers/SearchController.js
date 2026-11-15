@@ -10,6 +10,8 @@ class SearchController {
     this.currentFilter = 'youtube';
     this.debounceTimer = null;
     this.recentSearches = [];
+    this.currentQuery = '';
+    this.activeSearchId = 0;
   }
 
   init() {
@@ -62,17 +64,26 @@ class SearchController {
     if (this.searchInput) {
       this.searchInput.addEventListener('input', e => {
         const query = e.target.value.trim();
+        this.currentQuery = query;
         clearTimeout(this.debounceTimer);
+
         if (!query) {
-          document.getElementById('searchSectionHeader').textContent = 'Recent searches';
+          const header = document.getElementById('searchSectionHeader');
+          if (header) header.textContent = 'Recent searches';
           this.renderRecentSearches();
           return;
         }
 
-        document.getElementById('searchSectionHeader').textContent = `Results for "${query}"`;
+        const header = document.getElementById('searchSectionHeader');
+        if (header) header.textContent = `Results for "${query}"`;
+
+        // 1. Instant local results with ZERO debounce (< 1ms)
+        this.renderInstantLocalResults(query);
+
+        // 2. Debounced remote streaming search
         this.debounceTimer = setTimeout(() => {
           this.performSearch(query);
-        }, 220);
+        }, 200);
       });
     }
 
@@ -87,7 +98,6 @@ class SearchController {
       }
     } catch (e) {}
 
-    // Default screenshot matches if empty
     if (!this.recentSearches || this.recentSearches.length === 0) {
       this.recentSearches = [
         {
@@ -110,34 +120,6 @@ class SearchController {
           artist: 'Empire Of The Sun',
           album: 'Walking On A Dream',
           cover_art: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3e/42/a7/3e42a78d-57a3-fd69-6703-14d51205dd4c/13UMGIM24968.rgb.jpg/600x600bb.jpg'
-        },
-        {
-          id: 8,
-          title: 'Walking On A Dream (Myd Remix)',
-          artist: 'Empire Of The Sun',
-          album: 'Walking On A Dream Remixes',
-          cover_art: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3e/42/a7/3e42a78d-57a3-fd69-6703-14d51205dd4c/13UMGIM24968.rgb.jpg/600x600bb.jpg'
-        },
-        {
-          id: 9,
-          title: 'Naksh Naksh',
-          artist: 'Ali Kiba',
-          album: 'Best of Tanzania Bongo Classics',
-          cover_art: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/12/1f/93/121f9359-f134-8d0d-887d-ef61ac31a280/859741415228_cover.jpg/600x600bb.jpg'
-        },
-        {
-          id: 10,
-          title: 'Mile High Club',
-          artist: 'Vybz Kartel',
-          album: 'King of the Dancehall',
-          cover_art: 'https://is1-ssl.mzstatic.com/image/thumb/Music62/v4/cb/87/fb/cb87fb96-c983-e481-5d7e-9e5e1699b9dd/889326493617.jpg/600x600bb.jpg'
-        },
-        {
-          id: 11,
-          title: 'Goth',
-          artist: 'Sidewalks and Skeletons',
-          album: 'White Light',
-          cover_art: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4a/cb/ae/4acbae53-2ca7-194f-2595-a1ec80d7b4d4/889211443277.jpg/600x600bb.jpg'
         },
         {
           id: 1,
@@ -210,19 +192,112 @@ class SearchController {
     });
   }
 
-  async performSearch(query) {
+  // Feature 3: Instant Local Matches from in-memory tracks
+  renderInstantLocalResults(query) {
     if (!this.searchList) return;
-    this.searchList.innerHTML = `
-      <div style="text-align:center; padding:30px 20px; color:var(--text-muted); font-size:14px;">
-        Searching streaming catalog...
+    const q = query.toLowerCase();
+
+    const localMatches = (audioController.tracks || []).filter(t =>
+      (t.title && t.title.toLowerCase().includes(q)) ||
+      (t.artist && t.artist.toLowerCase().includes(q)) ||
+      (t.album && t.album.toLowerCase().includes(q))
+    ).slice(0, 4);
+
+    if (localMatches.length === 0) {
+      this.searchList.innerHTML = `
+        <div class="search-skeleton-loader" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+          <div style="height:48px; border-radius:12px; background:rgba(255,255,255,0.05); animation:pulse 1.2s infinite ease-in-out;"></div>
+          <div style="height:48px; border-radius:12px; background:rgba(255,255,255,0.03); animation:pulse 1.2s infinite ease-in-out;"></div>
+        </div>
+      `;
+      return;
+    }
+
+    const html = `
+      <div style="padding:4px 8px; font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--accent); font-weight:700;">
+        From Your Library
       </div>
+      ${localMatches.map(item => this.createRowHtml(item, true)).join('')}
+      <div style="padding:12px 8px 4px; font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); font-weight:700;">
+        Searching Online Catalog...
+      </div>
+      <div style="height:48px; border-radius:12px; margin:4px 0; background:rgba(255,255,255,0.04); animation:pulse 1.2s infinite ease-in-out;"></div>
     `;
 
+    this.searchList.innerHTML = html;
+    this.bindResultActions();
+  }
+
+  createRowHtml(item, isLocal = false) {
+    const dataStr = JSON.stringify(item).replace(/'/g, "&apos;");
+    const coverUrl = item.cover_art || item.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+
+    return `
+      <div class="search-row-item touch-spring" data-play-item='${dataStr}'>
+        <img class="search-row-cover" src="${coverUrl}" alt="${item.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'">
+        <div class="search-row-info">
+          <span class="search-row-title">${item.title}</span>
+          <span class="search-row-artist">${item.artist || 'Artist'}${isLocal ? ' • Instant' : ''}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="btn-row-add-next" title="Play Next" style="background:rgba(255,255,255,0.06); border:none; color:var(--text-secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; cursor:pointer;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          <button class="btn-row-add-queue" title="Add to Queue" style="background:rgba(255,255,255,0.06); border:none; color:var(--text-secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; cursor:pointer;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <div class="btn-row-play-now" style="color:var(--accent); font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; background:rgba(230,57,70,0.12); cursor:pointer;">
+            Play
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  bindResultActions() {
+    if (!this.searchList) return;
+
+    this.searchList.querySelectorAll('.search-row-item').forEach(row => {
+      const dataStr = row.getAttribute('data-play-item');
+      if (!dataStr) return;
+      const item = JSON.parse(dataStr);
+
+      const btnQueue = row.querySelector('.btn-row-add-queue');
+      if (btnQueue) {
+        btnQueue.addEventListener('click', (e) => {
+          e.stopPropagation();
+          audioController.addToQueue(item);
+        });
+      }
+
+      const btnNext = row.querySelector('.btn-row-add-next');
+      if (btnNext) {
+        btnNext.addEventListener('click', (e) => {
+          e.stopPropagation();
+          audioController.playNextInQueue(item);
+        });
+      }
+
+      row.addEventListener('click', () => {
+        this.addToRecent(item);
+        audioController.playSong(item);
+      });
+    });
+  }
+
+  async performSearch(query) {
+    if (!this.searchList) return;
+    const thisSearchId = ++this.activeSearchId;
+
     try {
-      const res = await fetch(apiUrl(`/api/stream/search?q=${encodeURIComponent(query)}`));
+      // Use parallel fast search endpoint
+      const res = await fetch(apiUrl(`/api/stream/search/fast?q=${encodeURIComponent(query)}`));
+      if (thisSearchId !== this.activeSearchId) return; // Stale query superseded
+
       if (res.ok) {
         const json = await res.json();
         const results = Array.isArray(json.data) ? json.data : (json.data && json.data.results ? json.data.results : []);
+
         if (results.length === 0) {
           this.searchList.innerHTML = `
             <div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:14px;">
@@ -232,53 +307,17 @@ class SearchController {
           return;
         }
 
-        this.searchList.innerHTML = results.map(item => `
-          <div class="search-row-item touch-spring" data-play-item='${JSON.stringify(item).replace(/'/g, "&apos;")}'>
-            <img class="search-row-cover" src="${item.cover_art || item.thumbnail}" alt="${item.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'">
-            <div class="search-row-info">
-              <span class="search-row-title">${item.title}</span>
-              <span class="search-row-artist">${item.artist || 'Artist'}</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <button class="btn-row-add-queue" title="Add to Queue" style="background:rgba(255,255,255,0.08); border:none; color:#fff; border-radius:50%; width:32px; height:32px; display:grid; place-items:center; cursor:pointer;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              </button>
-              <div class="btn-row-play-now" style="color:var(--accent); font-size:13px; font-weight:600; padding:6px 8px; cursor:pointer;">
-                Play
-              </div>
-            </div>
-          </div>
-        `).join('');
-
-        this.searchList.querySelectorAll('.search-row-item').forEach(row => {
-          const btnQueue = row.querySelector('.btn-row-add-queue');
-          if (btnQueue) {
-            btnQueue.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const dataStr = row.getAttribute('data-play-item');
-              if (dataStr) {
-                const item = JSON.parse(dataStr);
-                audioController.addToQueue(item);
-              }
-            });
-          }
-
-          row.addEventListener('click', () => {
-            const dataStr = row.getAttribute('data-play-item');
-            if (dataStr) {
-              const item = JSON.parse(dataStr);
-              this.addToRecent(item);
-              audioController.playSong(item);
-            }
-          });
-        });
+        this.searchList.innerHTML = results.map(item => this.createRowHtml(item, Boolean(item.isLocal))).join('');
+        this.bindResultActions();
       }
     } catch (e) {
-      this.searchList.innerHTML = `
-        <div style="text-align:center; padding:40px 20px; color:var(--accent); font-size:14px;">
-          Failed to search streams. Direct playback ready.
-        </div>
-      `;
+      if (thisSearchId === this.activeSearchId) {
+        this.searchList.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:14px;">
+            Search catalog busy. Please try again.
+          </div>
+        `;
+      }
     }
   }
 
@@ -297,4 +336,3 @@ class SearchController {
 }
 
 export const searchController = new SearchController();
-

@@ -6,9 +6,13 @@ class StreamingService {
   constructor() {
     this.memoryCache = new Map(); // query -> { url, expiresAt }
     this.searchCache = new Map(); // query -> results
+    this.inFlightResolutions = new Map(); // query -> Promise<url>
     this.ytDlpPath = this.resolveYtDlp();
     this.prewarmQueue = [];
     this.isPrewarming = false;
+    this.activeResolutions = 0;
+    this.maxConcurrentResolutions = 3;
+    this.waitQueue = [];
   }
 
   resolveYtDlp() {
@@ -18,6 +22,23 @@ class StreamingService {
       if (found) return found;
     } catch (e) {}
     return 'yt-dlp';
+  }
+
+  async acquireResolutionSlot() {
+    if (this.activeResolutions < this.maxConcurrentResolutions) {
+      this.activeResolutions++;
+      return;
+    }
+    await new Promise(resolve => this.waitQueue.push(resolve));
+    this.activeResolutions++;
+  }
+
+  releaseResolutionSlot() {
+    this.activeResolutions--;
+    if (this.waitQueue.length > 0) {
+      const next = this.waitQueue.shift();
+      next();
+    }
   }
 
   async getStreamUrl(query) {
@@ -41,66 +62,97 @@ class StreamingService {
       }
     } catch (e) {}
 
-    // 3. Resolve stream via optimized yt-dlp
-    return new Promise((resolve, reject) => {
-      const target = cleanQuery.startsWith('http') ? cleanQuery : `ytsearch1:${cleanQuery} audio`;
-      const cmd = `${this.ytDlpPath} -f "140/ba/b" --no-playlist --no-warnings --no-check-certificates --geo-bypass --extractor-args "youtube:player_client=android" -g "${target}"`;
+    // 3. Deduplicate in-flight requests for the exact same query
+    if (this.inFlightResolutions.has(cacheKey)) {
+      return this.inFlightResolutions.get(cacheKey);
+    }
 
-      exec(cmd, { timeout: 25000 }, (error, stdout) => {
-        if (error) {
-          console.error('[StreamingService] yt-dlp error:', error.message);
-          return reject(new Error('Failed to resolve audio stream'));
-        }
+    const resolutionPromise = (async () => {
+      await this.acquireResolutionSlot();
+      try {
+        const target = cleanQuery.startsWith('http') ? cleanQuery : `ytsearch1:${cleanQuery} audio`;
+        const cmd = `${this.ytDlpPath} -f "140/ba/b" --no-playlist --no-warnings --no-check-certificates --geo-bypass --socket-timeout 8 --retries 2 --extractor-args "youtube:player_client=android" -g "${target}"`;
 
-        const lines = (stdout || '').trim().split('\n');
-        const streamUrl = lines.map(l => l.trim()).find(l => l.startsWith('http'));
+        return await new Promise((resolve, reject) => {
+          exec(cmd, { timeout: 15000 }, (error, stdout) => {
+            if (error) {
+              console.error('[StreamingService] yt-dlp error:', error.message);
+              return reject(new Error('Failed to resolve audio stream'));
+            }
 
-        if (!streamUrl) {
-          console.error('[StreamingService] No stream URL in output:', stdout);
-          return reject(new Error('No stream URL extracted'));
-        }
+            const lines = (stdout || '').trim().split('\n');
+            const streamUrl = lines.map(l => l.trim()).find(l => l.startsWith('http'));
 
-        const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // 4 hours
+            if (!streamUrl) {
+              console.error('[StreamingService] No stream URL in output:', stdout);
+              return reject(new Error('No stream URL extracted'));
+            }
 
-        // Store in memory
-        this.memoryCache.set(cacheKey, { url: streamUrl, expiresAt });
+            const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // 4 hours
 
-        // Store in SQLite
-        try {
-          db.prepare(`
-            INSERT OR REPLACE INTO stream_cache (query, url, expires_at)
-            VALUES (?, ?, ?)
-          `).run(cacheKey, streamUrl, expiresAt);
-        } catch (e) {}
+            // Store in memory
+            this.memoryCache.set(cacheKey, { url: streamUrl, expiresAt });
 
-        resolve(streamUrl);
-      });
-    });
+            // Store in SQLite
+            try {
+              db.prepare(`
+                INSERT OR REPLACE INTO stream_cache (query, url, expires_at)
+                VALUES (?, ?, ?)
+              `).run(cacheKey, streamUrl, expiresAt);
+            } catch (e) {}
+
+            resolve(streamUrl);
+          });
+        });
+      } finally {
+        this.releaseResolutionSlot();
+        this.inFlightResolutions.delete(cacheKey);
+      }
+    })();
+
+    this.inFlightResolutions.set(cacheKey, resolutionPromise);
+    return resolutionPromise;
   }
 
-  async searchTracks(query, limit = 10) {
+  // Feature 1 & 2: Predictive Prefetch for multiple tracks in parallel
+  async prefetchUrls(queries = []) {
+    if (!Array.isArray(queries) || queries.length === 0) return [];
+    const validQueries = queries.filter(q => typeof q === 'string' && q.trim()).map(q => q.trim());
+
+    const results = await Promise.allSettled(
+      validQueries.map(async (query) => {
+        try {
+          const url = await this.getStreamUrl(query);
+          return { query, url, success: true };
+        } catch (err) {
+          return { query, error: err.message, success: false };
+        }
+      })
+    );
+
+    return results.map(r => r.status === 'fulfilled' ? r.value : { success: false });
+  }
+
+  // Feature 3: Parallel search across SQLite, iTunes and YouTube
+  async searchTracksParallel(query, limit = 10) {
     if (!query) return [];
     const cleanQuery = query.trim();
     const cacheKey = cleanQuery.toLowerCase();
 
-    // 1. Check in-memory search cache
     if (this.searchCache.has(cacheKey)) {
       return this.searchCache.get(cacheKey);
     }
 
-    const results = [];
+    const localPromise = (async () => {
+      try {
+        const rows = db.prepare(`
+          SELECT id, title, artist, album, duration, cover_art
+          FROM tracks
+          WHERE title LIKE ? OR artist LIKE ?
+          LIMIT 5
+        `).all(`%${cleanQuery}%`, `%${cleanQuery}%`);
 
-    // 2. Match local SQLite database tracks first (< 1ms)
-    try {
-      const localTracks = db.prepare(`
-        SELECT id, title, artist, album, duration, cover_art
-        FROM tracks
-        WHERE title LIKE ? OR artist LIKE ?
-        LIMIT 5
-      `).all(`%${cleanQuery}%`, `%${cleanQuery}%`);
-
-      for (const t of localTracks) {
-        results.push({
+        return rows.map(t => ({
           id: t.id,
           title: t.title,
           artist: t.artist,
@@ -109,25 +161,34 @@ class StreamingService {
           cover_art: t.cover_art,
           thumbnail: t.cover_art,
           isLocal: true
-        });
+        }));
+      } catch (e) {
+        return [];
       }
-    } catch (e) {}
+    })();
 
-    // 3. Fast Music Catalog Search via iTunes API (takes ~1s vs 40s yt-dlp)
-    try {
-      const itunesResults = await this.fetchItunesSearch(cleanQuery, limit);
-      for (const item of itunesResults) {
-        // Avoid duplicates if already found in local DB
-        const exists = results.some(r => r.title.toLowerCase() === item.title.toLowerCase() && r.artist.toLowerCase() === item.artist.toLowerCase());
+    const itunesPromise = this.fetchItunesSearch(cleanQuery, limit);
+
+    const [localRes, itunesRes] = await Promise.allSettled([localPromise, itunesPromise]);
+
+    const results = [];
+    if (localRes.status === 'fulfilled' && Array.isArray(localRes.value)) {
+      results.push(...localRes.value);
+    }
+
+    if (itunesRes.status === 'fulfilled' && Array.isArray(itunesRes.value)) {
+      for (const item of itunesRes.value) {
+        const exists = results.some(r =>
+          r.title.toLowerCase() === item.title.toLowerCase() &&
+          r.artist.toLowerCase() === item.artist.toLowerCase()
+        );
         if (!exists) {
           results.push(item);
         }
       }
-    } catch (e) {
-      console.warn('[StreamingService] iTunes search error:', e.message);
     }
 
-    // 4. If iTunes returned nothing, fallback to quick yt-dlp search
+    // Fallback to yt-dlp only if zero results
     if (results.length === 0) {
       try {
         const ytResults = await this.fetchYtDlpSearch(cleanQuery, Math.min(limit, 5));
@@ -135,10 +196,8 @@ class StreamingService {
       } catch (e) {}
     }
 
-    // Cache results for 1 hour
     if (results.length > 0) {
       this.searchCache.set(cacheKey, results);
-      // Auto-prewarm the top result in background for instantaneous play on tap
       const top = results[0];
       if (top) {
         this.queuePrewarm(`${top.artist} ${top.title}`);
@@ -148,10 +207,14 @@ class StreamingService {
     return results;
   }
 
+  async searchTracks(query, limit = 10) {
+    return this.searchTracksParallel(query, limit);
+  }
+
   fetchItunesSearch(query, limit = 10) {
     return new Promise((resolve) => {
       const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`;
-      const req = https.get(url, { timeout: 4000 }, (res) => {
+      const req = https.get(url, { timeout: 3500 }, (res) => {
         let data = '';
         res.on('data', chunk => { data += chunk; });
         res.on('end', () => {
@@ -185,7 +248,7 @@ class StreamingService {
   fetchYtDlpSearch(query, limit = 5) {
     return new Promise((resolve) => {
       const cmd = `${this.ytDlpPath} --dump-json --flat-playlist --default-search "ytsearch${limit}" "${query}" 2>/dev/null`;
-      exec(cmd, { timeout: 10000 }, (error, stdout) => {
+      exec(cmd, { timeout: 8000 }, (error, stdout) => {
         if (error || !stdout) return resolve([]);
         const results = [];
         const lines = stdout.trim().split('\n');
@@ -225,11 +288,8 @@ class StreamingService {
       const nextQuery = this.prewarmQueue.shift();
       try {
         await this.getStreamUrl(nextQuery);
-        console.log('[StreamingService] Pre-warmed audio cache for:', nextQuery);
       } catch (e) {}
-
-      // Gentle delay between pre-warms so CPU remains totally free for user playback
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 400));
     }
 
     this.isPrewarming = false;
@@ -238,7 +298,6 @@ class StreamingService {
 
 const service = new StreamingService();
 
-// Pre-warm default home tracks sequentially in background
 setTimeout(() => {
   const defaultTracks = [
     'YoungBoy Never Broke Again Make No Sense',
@@ -251,6 +310,6 @@ setTimeout(() => {
   for (const t of defaultTracks) {
     service.queuePrewarm(t);
   }
-}, 1500);
+}, 1000);
 
 module.exports = service;

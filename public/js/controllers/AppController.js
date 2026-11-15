@@ -54,7 +54,27 @@ class AppController {
     this.loadInitialData().then(() => {
       this.renderTopPicks();
       this.renderRecentTracks();
+      this.handleDeepLink();
     }).catch(err => console.warn('[AppController] Feed background load:', err));
+  }
+
+  // Feature 10: Deep Link Handling
+  handleDeepLink() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get('q') || params.get('play') || params.get('song');
+      if (query) {
+        errorHandler.showToast(`Playing shared song: ${query}`);
+        audioController.playSong({
+          id: Date.now(),
+          title: query,
+          artist: 'Shared Stream',
+          album: 'Deep Link',
+          duration: 210,
+          cover_art: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'
+        });
+      }
+    } catch (e) {}
   }
 
   updateGreeting() {
@@ -614,6 +634,89 @@ class AppController {
     const btnDownload = document.getElementById('btnSheetDownload');
     if (btnDownload) {
       btnDownload.addEventListener('click', () => audioController.downloadCurrentTrack());
+    }
+
+    // Feature 10: Share Track button
+    const btnShare = document.getElementById('btnSheetShare');
+    if (btnShare) {
+      btnShare.addEventListener('click', () => {
+        haptics.trigger('medium');
+        audioController.shareCurrentTrack();
+      });
+    }
+
+    // Feature 5: Sleep Timer Modal & Button
+    const btnSleepTimer = document.getElementById('btnSheetSleepTimer');
+    const sleepModal = document.getElementById('sleepTimerModal');
+    const btnCloseSleep = document.getElementById('btnCloseSleepTimerModal');
+
+    if (btnSleepTimer && sleepModal) {
+      btnSleepTimer.addEventListener('click', () => {
+        haptics.trigger('medium');
+        sleepModal.classList.add('is-open');
+      });
+    }
+
+    if (btnCloseSleep && sleepModal) {
+      btnCloseSleep.addEventListener('click', () => {
+        haptics.trigger('light');
+        sleepModal.classList.remove('is-open');
+      });
+      sleepModal.addEventListener('click', (e) => {
+        if (e.target === sleepModal) sleepModal.classList.remove('is-open');
+      });
+    }
+
+    document.querySelectorAll('.btn-sleep-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mins = btn.dataset.mins;
+        if (mins === '0') {
+          audioController.cancelSleepTimer();
+        } else if (mins === 'end') {
+          audioController.setSleepTimer('end');
+        } else {
+          audioController.setSleepTimer(parseInt(mins, 10));
+        }
+        if (sleepModal) sleepModal.classList.remove('is-open');
+      });
+    });
+
+    window.addEventListener('musii:sleep-timer-update', (e) => {
+      const { active, remainingSeconds, mode } = e.detail;
+      if (btnSleepTimer) {
+        btnSleepTimer.style.color = active ? 'var(--accent)' : '';
+      }
+      const statusText = document.getElementById('sleepTimerStatusText');
+      if (statusText) {
+        if (!active) {
+          statusText.textContent = 'Audio stops smoothly with fade out';
+        } else if (mode === 'end') {
+          statusText.textContent = 'Stopping after current track';
+        } else {
+          const m = Math.floor(remainingSeconds / 60);
+          const s = remainingSeconds % 60;
+          statusText.textContent = `Stopping in ${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+      }
+    });
+
+    // Shuffle & Repeat buttons
+    const btnShuffle = document.getElementById('btnSheetShuffle');
+    if (btnShuffle) {
+      btnShuffle.style.color = audioController.isShuffled ? 'var(--accent)' : 'var(--text-muted)';
+      btnShuffle.addEventListener('click', () => {
+        const shuffled = audioController.toggleShuffle();
+        btnShuffle.style.color = shuffled ? 'var(--accent)' : 'var(--text-muted)';
+      });
+    }
+
+    const btnRepeat = document.getElementById('btnSheetRepeat');
+    if (btnRepeat) {
+      btnRepeat.style.color = audioController.repeatMode !== 'off' ? 'var(--accent)' : 'var(--text-muted)';
+      btnRepeat.addEventListener('click', () => {
+        const mode = audioController.cycleRepeat();
+        btnRepeat.style.color = mode !== 'off' ? 'var(--accent)' : 'var(--text-muted)';
+      });
     }
 
     const btnHeaderUpload = document.getElementById('btnHeaderUpload');

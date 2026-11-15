@@ -110,6 +110,34 @@ router.get('/download', async (req, res, next) => {
   }
 });
 
+// Prefetch multiple track stream URLs in parallel (Gapless Playback Engine)
+router.post('/prefetch', async (req, res, next) => {
+  try {
+    const queries = req.body && Array.isArray(req.body.queries) ? req.body.queries : [];
+    if (queries.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+    const data = await streamingService.prefetchUrls(queries);
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Fast search with parallel catalog lookups
+router.get('/search/fast', async (req, res, next) => {
+  try {
+    const query = req.query.q || req.query.query;
+    if (!query) {
+      return res.status(400).json({ success: false, error: 'Query parameter q is required' });
+    }
+    const results = await streamingService.searchTracksParallel(query, parseInt(req.query.limit, 10) || 10);
+    res.json({ success: true, data: results });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Search YouTube tracks
 router.get('/search', async (req, res, next) => {
   try {
