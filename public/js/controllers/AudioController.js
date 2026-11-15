@@ -62,6 +62,34 @@ class AudioController {
 
     this._loadPersistedSettings();
     this.initAudioListeners();
+
+    // Register navigator.mediaSession action handlers eagerly at startup.
+    // Samsung One UI and Chrome mobile require these to be set BEFORE playback
+    // begins, otherwise the media notification is never created and background
+    // audio is killed when the app is closed or screen is locked.
+    this._registerMediaSessionHandlers();
+  }
+
+  _registerMediaSessionHandlers() {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    const setAction = (action, handler) => {
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) {}
+    };
+    setAction('play', () => this.togglePlay());
+    setAction('pause', () => this.pause());
+    setAction('previoustrack', () => this.prev());
+    setAction('nexttrack', () => this.next());
+    setAction('seekto', (details) => {
+      if (details && details.seekTime != null) this.seekTo(details.seekTime);
+    });
+    setAction('seekbackward', (details) => {
+      const offset = (details && details.seekOffset) || 10;
+      this.seekTo(Math.max(0, this.currentTime - offset));
+    });
+    setAction('seekforward', (details) => {
+      const offset = (details && details.seekOffset) || 10;
+      this.seekTo(Math.min(this.duration, this.currentTime + offset));
+    });
   }
 
   // ============================
@@ -240,6 +268,12 @@ class AudioController {
         coverUrl,
         Number(this.duration || 210)
       );
+      // CRITICAL: Call updateMediaSession immediately for native playback.
+      // HTML5 audio element events (playing/play/pause) do NOT fire when
+      // MusiiNative handles playback, so mediaSession metadata and action
+      // handlers would never be registered, causing Samsung One UI to
+      // drop the notification and kill background audio.
+      this.updateMediaSession(track);
     } else {
       const el = this._getActiveAudioEl();
       if (el.src !== streamUrl) {
@@ -263,6 +297,7 @@ class AudioController {
     this.isPlaying = false;
     if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.pauseAudio === 'function') {
       window.MusiiNative.pauseAudio();
+      this.updateMediaSession(this.getCurrentTrack());
     } else {
       this._getActiveAudioEl().pause();
     }
@@ -288,6 +323,7 @@ class AudioController {
   onNativePlaying() {
     this.isBuffering = false;
     this.isPlaying = true;
+    this.updateMediaSession(this.getCurrentTrack());
     this.notify();
   }
 
@@ -299,6 +335,7 @@ class AudioController {
       if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.resumeAudio === 'function') {
         window.MusiiNative.resumeAudio();
         this.isPlaying = true;
+        this.updateMediaSession(this.getCurrentTrack());
         this.notify();
       } else {
         this.play();
