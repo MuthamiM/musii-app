@@ -21,23 +21,41 @@ class AuthService {
       VALUES (?, ?, ?)
     `).run(cleanEmail, code, expiresAt);
 
+    // Check if account already exists for recovery
+    let isExistingUser = false;
+    try {
+      const existing = db.prepare('SELECT * FROM user_accounts WHERE email = ?').get(cleanEmail);
+      isExistingUser = Boolean(existing);
+    } catch (e) {
+      isExistingUser = false;
+    }
+
     // Send via Resend
-    const html = resendService.generateEmailHtml(code);
-    const text = `Your MUSII verification code is: ${code}. Valid for 10 minutes.`;
+    const html = resendService.generateEmailHtml(code, isExistingUser);
+    const text = isExistingUser
+      ? `Your MUSII verification code to recover your account is: ${code}. Valid for 10 minutes.`
+      : `Your MUSII verification code is: ${code}. Valid for 10 minutes.`;
+
+    const subject = isExistingUser
+      ? `Recover Your MUSII Account: ${code}`
+      : `MUSII Verification Code: ${code}`;
 
     const sendRes = await resendService.sendEmail({
       to: cleanEmail,
-      subject: `MUSII Verification Code: ${code}`,
+      subject,
       html,
       text
     });
 
-    console.log(`[Auth] Verification code for ${cleanEmail}: ${code} (Sent: ${sendRes.success})`);
+    console.log(`[Auth] Code for ${cleanEmail}: ${code} (Recover: ${isExistingUser}, Sent: ${sendRes.success})`);
 
     return {
       success: true,
       email: cleanEmail,
-      message: 'Verification code sent to email',
+      isExistingUser,
+      message: isExistingUser
+        ? 'Verification code sent to recover your account'
+        : 'Verification code sent to email',
       sent: sendRes.success
     };
   }
@@ -72,27 +90,67 @@ class AuthService {
       VALUES (?, ?)
     `).run(token, cleanEmail);
 
-    // Get or update user profile
-    const username = cleanEmail.split('@')[0];
-    const initial = (username[0] || 'M').toUpperCase();
+    // Check if user account exists (Account Recovery)
+    let account = null;
+    let isRecovered = false;
 
-    db.prepare(`
-      UPDATE user_profile
-      SET name = ?, handle = ?, avatar_initial = ?
-      WHERE id = 'usr-1'
-    `).run(username, `@${username}`, initial);
+    try {
+      account = db.prepare('SELECT * FROM user_accounts WHERE email = ?').get(cleanEmail);
+    } catch (e) {}
 
-    const user = db.prepare('SELECT * FROM user_profile WHERE id = ?').get('usr-1');
+    if (account) {
+      // Existing user: RECOVER ACCOUNT AND RESTORE PROGRESS
+      isRecovered = true;
+      try {
+        db.prepare(`
+          UPDATE user_accounts
+          SET last_login = CURRENT_TIMESTAMP
+          WHERE email = ?
+        `).run(cleanEmail);
+
+        db.prepare(`
+          UPDATE user_profile
+          SET name = ?, handle = ?, avatar_initial = ?
+          WHERE id = 'usr-1'
+        `).run(account.name, account.handle, account.avatar_initial);
+      } catch (e) {}
+    } else {
+      // New user registration
+      const baseName = cleanEmail.split('@')[0];
+      const initial = (baseName[0] || 'M').toUpperCase();
+      const defaultHandle = `@${baseName}`;
+
+      try {
+        db.prepare(`
+          INSERT INTO user_accounts (email, name, handle, avatar_initial)
+          VALUES (?, ?, ?, ?)
+        `).run(cleanEmail, baseName, defaultHandle, initial);
+
+        db.prepare(`
+          UPDATE user_profile
+          SET name = ?, handle = ?, avatar_initial = ?
+          WHERE id = 'usr-1'
+        `).run(baseName, defaultHandle, initial);
+      } catch (e) {}
+
+      account = {
+        email: cleanEmail,
+        name: baseName,
+        handle: defaultHandle,
+        avatar_initial: initial
+      };
+    }
 
     return {
       success: true,
       token,
-      requiresUsername: true,
+      isRecovered,
+      requiresUsername: !isRecovered,
       user: {
         email: cleanEmail,
-        name: user.name,
-        handle: user.handle,
-        avatar_initial: user.avatar_initial
+        name: account.name,
+        handle: account.handle,
+        avatar_initial: account.avatar_initial
       }
     };
   }
@@ -113,21 +171,31 @@ class AuthService {
     }
 
     const initial = clean[0].toUpperCase();
+    const handle = `@${clean}`;
+
+    // Update active profile
     db.prepare(`
       UPDATE user_profile
       SET name = ?, handle = ?, avatar_initial = ?
       WHERE id = 'usr-1'
-    `).run(clean, `@${clean}`, initial);
+    `).run(clean, handle, initial);
 
-    const user = db.prepare('SELECT * FROM user_profile WHERE id = ?').get('usr-1');
+    // Update persisted account for this email
+    try {
+      db.prepare(`
+        UPDATE user_accounts
+        SET name = ?, handle = ?, avatar_initial = ?
+        WHERE email = ?
+      `).run(clean, handle, initial, session.email);
+    } catch (e) {}
 
     return {
       success: true,
       user: {
         email: session.email,
-        name: user.name,
-        handle: user.handle,
-        avatar_initial: user.avatar_initial
+        name: clean,
+        handle: handle,
+        avatar_initial: initial
       }
     };
   }
@@ -139,12 +207,30 @@ class AuthService {
     if (!session) return { valid: false };
 
     db.prepare('UPDATE auth_sessions SET last_active = CURRENT_TIMESTAMP WHERE token = ?').run(token);
-    const user = db.prepare('SELECT * FROM user_profile WHERE id = ?').get('usr-1');
+
+    let account = null;
+    try {
+      account = db.prepare('SELECT * FROM user_accounts WHERE email = ?').get(session.email);
+    } catch (e) {}
+
+    if (!account) {
+      const user = db.prepare('SELECT * FROM user_profile WHERE id = ?').get('usr-1');
+      account = {
+        name: user ? user.name : 'MUSII Member',
+        handle: user ? user.handle : '@user',
+        avatar_initial: user ? user.avatar_initial : 'M'
+      };
+    }
 
     return {
       valid: true,
       email: session.email,
-      user
+      user: {
+        email: session.email,
+        name: account.name,
+        handle: account.handle,
+        avatar_initial: account.avatar_initial
+      }
     };
   }
 

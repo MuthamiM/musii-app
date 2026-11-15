@@ -124,13 +124,24 @@ class AuthController {
     }
   }
 
-  showCodeStep(email) {
+  showCodeStep(email, isExistingUser = false) {
     this.currentEmail = email;
     if (this.stepEmail) this.stepEmail.classList.remove('active');
     if (this.stepCode) this.stepCode.classList.add('active');
     
     const badge = document.getElementById('authTargetEmail');
     if (badge) badge.textContent = email;
+
+    const titleEl = document.getElementById('authCodeStepTitle');
+    const subtitleEl = document.getElementById('authCodeStepSubtitle');
+    if (titleEl) {
+      titleEl.textContent = isExistingUser ? 'Recover Account' : 'Verify Email';
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = isExistingUser
+        ? 'Enter the code sent to restore your saved profile and library.'
+        : 'Enter the 6-digit code sent to your email to start listening.';
+    }
 
     if (this.inputCode) {
       this.inputCode.value = '';
@@ -222,8 +233,12 @@ class AuthController {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        errorHandler.showToast('Verification code sent to your email');
-        this.showCodeStep(email);
+        if (data.data && data.data.isExistingUser) {
+          errorHandler.showToast('Account found. Recovery code sent to your email.');
+        } else {
+          errorHandler.showToast('Verification code sent to your email');
+        }
+        this.showCodeStep(email, Boolean(data.data && data.data.isExistingUser));
       } else {
         throw new Error(data.error?.message || 'Failed to send code');
       }
@@ -282,8 +297,26 @@ class AuthController {
         localStorage.setItem('musii_token', this.token);
         localStorage.setItem('musii_user', JSON.stringify(data.data.user));
 
-        haptics.trigger('medium');
-        this.showUsernameStep(data.data.user);
+        this.updateProfileUI(data.data.user);
+        window.dispatchEvent(new CustomEvent('musii:user-updated', { detail: { user: data.data.user } }));
+
+        if (data.data.isRecovered || !data.data.requiresUsername) {
+          // Existing account: Instant Recovery!
+          this.hideAuth();
+          haptics.trigger('heavy');
+          const name = data.data.user.name || 'Member';
+          errorHandler.showToast(`Account recovered: Welcome back, ${name}!`);
+
+          setTimeout(() => {
+            if (!audioController.isPlaying) {
+              audioController.play();
+            }
+          }, 350);
+        } else {
+          // Brand new user: prompt to choose custom username
+          haptics.trigger('medium');
+          this.showUsernameStep(data.data.user);
+        }
       } else {
         throw new Error(data.error?.message || 'Invalid code');
       }
@@ -321,10 +354,14 @@ class AuthController {
     const nameEl = document.getElementById('profileUserName');
     const handleEl = document.getElementById('profileUserHandle');
     const initialEl = document.getElementById('profileUserInitial');
+    const emailEl = document.getElementById('profileUserEmail');
 
     if (nameEl) nameEl.textContent = user.name || 'MUSII Member';
     if (handleEl) handleEl.textContent = `${user.handle || '@user'} • Audiophile Lossless`;
     if (initialEl) initialEl.textContent = user.avatar_initial || 'M';
+    if (emailEl && user.email) {
+      emailEl.textContent = user.email;
+    }
   }
 
   async signOut() {

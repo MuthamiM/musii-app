@@ -96,10 +96,27 @@ function initTables() {
       FOREIGN KEY (track_id) REFERENCES tracks(id)
     );
 
+    CREATE TABLE IF NOT EXISTS user_accounts (
+      email TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      handle TEXT NOT NULL,
+      avatar_initial TEXT NOT NULL,
+      playlists_count INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_login DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS auth_codes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL,
       code TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS stream_cache (
+      query TEXT PRIMARY KEY,
+      url TEXT NOT NULL,
       expires_at INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -111,6 +128,9 @@ function initTables() {
       last_active DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE INDEX IF NOT EXISTS idx_stream_cache_expires ON stream_cache(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_user_accounts_email ON user_accounts(email);
+    CREATE INDEX IF NOT EXISTS idx_user_accounts_email ON user_accounts(email);
     CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email);
     CREATE INDEX IF NOT EXISTS idx_tracks_category ON tracks(category);
     CREATE INDEX IF NOT EXISTS idx_play_history_played_at ON play_history(played_at DESC);

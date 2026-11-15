@@ -15,6 +15,7 @@ class AudioController {
     this.currentLyricIdx = -1;
     this.useDirectStream = true;
     this.queue = [];
+    this.isBuffering = false;
 
     // Native HTML5 Realtime Audio Element
     this.audio = new Audio();
@@ -24,6 +25,28 @@ class AudioController {
   }
 
   initAudioListeners() {
+    this.audio.addEventListener('loadstart', () => {
+      this.isBuffering = true;
+      this.notify();
+    });
+
+    this.audio.addEventListener('waiting', () => {
+      this.isBuffering = true;
+      this.notify();
+    });
+
+    this.audio.addEventListener('canplay', () => {
+      this.isBuffering = false;
+      this.notify();
+    });
+
+    this.audio.addEventListener('playing', () => {
+      this.isBuffering = false;
+      this.isPlaying = true;
+      this.updateMediaSession(this.getCurrentTrack());
+      this.notify();
+    });
+
     this.audio.addEventListener('timeupdate', () => {
       this.currentTime = Math.floor(this.audio.currentTime);
       if (this.audio.duration && !isNaN(this.audio.duration)) {
@@ -135,6 +158,8 @@ class AudioController {
 
     const track = this.getCurrentTrack();
     this.duration = track.duration || 210;
+    this.isBuffering = true;
+    this.notify();
 
     if (this.useDirectStream) {
       this.audio.src = apiUrl(`/api/stream/play?q=${encodeURIComponent(track.artist + ' ' + track.title)}`);
@@ -312,7 +337,13 @@ class AudioController {
 
   notify() {
     const track = this.getCurrentTrack();
-    this.listeners.forEach(fn => fn({ track, isPlaying: this.isPlaying, currentTime: this.currentTime, duration: this.duration }));
+    this.listeners.forEach(fn => fn({
+      track,
+      isPlaying: this.isPlaying,
+      isBuffering: Boolean(this.isBuffering),
+      currentTime: this.currentTime,
+      duration: this.duration
+    }));
   }
 
   notifyProgress() {

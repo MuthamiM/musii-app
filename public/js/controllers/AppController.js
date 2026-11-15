@@ -5,6 +5,7 @@ import { modalController } from './ModalController.js';
 import { authController } from './AuthController.js';
 import { settingsController } from './SettingsController.js';
 import { searchController } from './SearchController.js';
+import { updateController } from './UpdateController.js';
 import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
 import { DEFAULT_TRACKS, DEFAULT_PICKS } from '../constants/tracks.js';
@@ -22,6 +23,7 @@ class AppController {
     modalController.init();
     settingsController.init();
     searchController.init();
+    updateController.init();
     this.updateGreeting();
 
     // Render immediately using default tracks so the user never sees an empty screen
@@ -256,17 +258,24 @@ class AppController {
     const PLAY_SVG = '<polygon points="8 5 19 12 8 19 8 5"></polygon>';
     const PAUSE_SVG = '<rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect>';
 
-    audioController.subscribe(({ track, isPlaying }) => {
+    audioController.subscribe(({ track, isPlaying, isBuffering }) => {
       const miniName = document.getElementById('miniTrackName');
       const miniArtist = document.getElementById('miniTrackArtist');
       if (miniName) miniName.textContent = track.title;
-      if (miniArtist) miniArtist.textContent = `${track.artist} • ${track.album}`;
+      if (miniArtist) {
+        miniArtist.textContent = isBuffering
+          ? 'Connecting lossless stream...'
+          : `${track.artist} • ${track.album}`;
+      }
 
       const miniImg = document.getElementById('miniCoverImg');
       if (miniImg && track.cover_art) miniImg.src = track.cover_art;
 
       const miniPlayer = document.getElementById('floatingMiniPlayer');
-      if (miniPlayer) miniPlayer.classList.toggle('is-playing', isPlaying);
+      if (miniPlayer) {
+        miniPlayer.classList.toggle('is-playing', isPlaying);
+        miniPlayer.classList.toggle('is-buffering', Boolean(isBuffering));
+      }
 
       const miniIcon = document.getElementById('iconMiniPlayPause');
       if (miniIcon) miniIcon.innerHTML = isPlaying ? PAUSE_SVG : PLAY_SVG;

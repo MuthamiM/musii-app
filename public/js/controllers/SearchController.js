@@ -72,7 +72,7 @@ class SearchController {
         document.getElementById('searchSectionHeader').textContent = `Results for "${query}"`;
         this.debounceTimer = setTimeout(() => {
           this.performSearch(query);
-        }, 320);
+        }, 220);
       });
     }
 

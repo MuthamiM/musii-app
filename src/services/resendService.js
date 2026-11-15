@@ -60,13 +60,18 @@ class ResendService {
     });
   }
 
-  generateEmailHtml(code) {
+  generateEmailHtml(code, isExistingUser = false) {
+    const titleText = isExistingUser ? 'Recover Your MUSII Account' : 'Your MUSII Verification Code';
+    const bodyText = isExistingUser
+      ? 'Enter this 6-digit verification code to recover your account, profile, and playlists.'
+      : 'Enter this 6-digit verification code to sign in and start listening.';
+
     return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Your MUSII Verification Code</title>
+  <title>${titleText}</title>
 </head>
 <body style="margin:0; padding:0; background-color:#050508; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#ffffff;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#050508; padding:40px 16px;">
@@ -79,13 +84,13 @@ class ResendService {
                 M
               </div>
               <h1 style="margin:16px 0 6px; font-size:24px; font-weight:700; letter-spacing:-0.5px; color:#ffffff;">MUSII</h1>
-              <p style="margin:0; font-size:14px; color:rgba(255,255,255,0.55);">Minimalist Liquid Glass Music</p>
+              <p style="margin:0; font-size:14px; color:rgba(255,255,255,0.55);">${titleText}</p>
             </td>
           </tr>
           <tr>
             <td style="padding:16px 0;">
               <p style="margin:0 0 20px; font-size:15px; color:rgba(255,255,255,0.85); line-height:1.5;">
-                Enter this 6-digit verification code to sign in and start listening.
+                ${bodyText}
               </p>
               <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.18); border-radius:16px; padding:18px 24px; display:inline-block; letter-spacing:10px; font-size:32px; font-weight:800; color:#f0443a;">
                 ${code}

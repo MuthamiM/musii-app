@@ -9,6 +9,7 @@ const streamRoutes = require('./streamRoutes');
 const spotifyRoutes = require('./spotifyRoutes');
 const lyricsRoutes = require('./lyricsRoutes');
 const edgeRouter = require('../services/edgeRouter');
+const updateService = require('../services/updateService');
 const env = require('../config/env');
 
 // Disable caching on all API endpoints so clients never receive empty 304 bodies
@@ -17,6 +18,23 @@ router.use((req, res, next) => {
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   next();
+});
+
+// App update & version check endpoint (In-app updates)
+router.get('/app/version', async (req, res) => {
+  try {
+    const clientVersion = req.query.currentVersion || req.query.version;
+    const info = await updateService.getUpdateInfo(clientVersion);
+    res.status(200).json({
+      success: true,
+      data: info
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
 });
 
 // API status & healthcheck endpoint (strictly NO emojis)

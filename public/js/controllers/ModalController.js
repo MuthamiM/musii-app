@@ -13,36 +13,6 @@ class ModalController {
     this.playerSheet = document.getElementById('fullscreenPlayerSheet');
     this.systemToast = document.getElementById('systemToastPill');
 
-    const triggerBtn = document.getElementById('btnHeaderUpdatePill');
-    const profileUpdateBtn = document.getElementById('btnProfileUpdateOption');
-
-    if (triggerBtn) triggerBtn.addEventListener('click', () => this.openUpdateModal());
-    if (profileUpdateBtn) profileUpdateBtn.addEventListener('click', () => this.openUpdateModal());
-
-    const btnDownload = document.getElementById('btnModalDownload');
-    const btnRemind = document.getElementById('btnModalRemind');
-
-    if (btnDownload) {
-      btnDownload.addEventListener('click', () => {
-        haptics.trigger('heavy');
-        this.closeUpdateModal();
-        errorHandler.showToast('MUSII v1.9.1 Hotfix installed successfully.');
-      });
-    }
-
-    if (btnRemind) {
-      btnRemind.addEventListener('click', () => {
-        haptics.trigger('light');
-        this.closeUpdateModal();
-      });
-    }
-
-    if (this.updateModal) {
-      this.updateModal.addEventListener('click', e => {
-        if (e.target === this.updateModal) this.closeUpdateModal();
-      });
-    }
-
     if (this.systemToast) {
       this.systemToast.addEventListener('click', () => {
         haptics.trigger('light');
