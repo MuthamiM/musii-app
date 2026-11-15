@@ -83,23 +83,61 @@ class SpotifyService {
 
   async importCollection(collectionUrl) {
     const oembedData = await this.fetchJson(`https://open.spotify.com/oembed?url=${encodeURIComponent(collectionUrl)}`);
-    const title = oembedData?.title || 'Imported Spotify Playlist';
-    const coverArt = oembedData?.thumbnail_url || '';
+    let title = oembedData?.title || 'Imported Spotify Playlist';
+    let coverArt = oembedData?.thumbnail_url || '';
+
+    // Convert standard open.spotify.com/playlist/xxx to embed URL
+    const embedUrl = collectionUrl.replace('open.spotify.com/playlist/', 'open.spotify.com/embed/playlist/')
+                                  .replace('open.spotify.com/album/', 'open.spotify.com/embed/album/');
+    const embedHtml = await this.fetchHtml(embedUrl);
+
+    let extractedTracks = [];
+    if (embedHtml) {
+      try {
+        const match = embedHtml.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s);
+        if (match && match[1]) {
+          const nextData = JSON.parse(match[1]);
+          const entity = nextData?.props?.pageProps?.state?.data?.entity;
+          if (entity) {
+            if (entity.name) title = entity.name;
+            if (entity.coverArt?.sources?.[0]?.url) coverArt = entity.coverArt.sources[0].url;
+            const list = entity.trackList || [];
+            extractedTracks = list.map(item => ({
+              title: item.title || item.name || 'Unknown Track',
+              artist: item.subtitle || item.artists?.[0]?.name || 'Various Artists',
+              duration: item.duration ? Math.round(item.duration / 1000) : 210,
+              cover_art: coverArt,
+              category: 'Spotify Import'
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn('[SpotifyService] Failed to parse embed trackList:', e.message);
+      }
+    }
 
     const playlistId = `pl-spot-${Date.now()}`;
     const gradient = 'linear-gradient(135deg, #1db954 0%, #121212 100%)';
 
     db.prepare(`
       INSERT INTO playlists (id, name, song_count, is_favorite, is_cache_playlist, gradient)
-      VALUES (?, ?, ?, 0, 0, ?)
-    `).run(playlistId, title, 1, gradient);
+      VALUES (?, ?, 0, 0, 0, ?)
+    `).run(playlistId, title, gradient);
 
-    const playlist = db.prepare('SELECT * FROM playlists WHERE id = ?').get(playlistId);
+    // Add extracted tracks to the playlist
+    const playlistService = require('./playlistService');
+    for (const track of extractedTracks) {
+      try {
+        await playlistService.addTrackToPlaylist(playlistId, track);
+      } catch (err) {}
+    }
+
+    const playlist = await playlistService.getPlaylistById(playlistId);
 
     return {
       type: 'playlist',
       playlist,
-      message: `Imported playlist "${title}"`
+      message: `Imported playlist "${title}" with ${extractedTracks.length} tracks`
     };
   }
 

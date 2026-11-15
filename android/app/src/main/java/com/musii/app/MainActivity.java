@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -13,7 +16,10 @@ import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final String TAG = "MUSII_Main";
     private static MainActivity activeInstance = null;
+    private boolean nativeBridgeInjected = false;
+    private final Handler retryHandler = new Handler(Looper.getMainLooper());
 
     public static void dispatchMediaAction(String action) {
         if (activeInstance != null && activeInstance.getBridge() != null) {
@@ -70,10 +76,18 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activeInstance = this;
+        Log.d(TAG, "onCreate: Activity created");
 
-        // Ensure POST_NOTIFICATIONS is requested on launch for Android 13+ (Samsung One UI 5+)
         requestNotificationPermission();
-        setupWebView();
+
+        // Attempt immediate injection
+        injectNativeBridge();
+
+        // Schedule retries -- Capacitor WebView may not be ready until after layout
+        retryHandler.postDelayed(this::injectNativeBridge, 300);
+        retryHandler.postDelayed(this::injectNativeBridge, 800);
+        retryHandler.postDelayed(this::injectNativeBridge, 1500);
+        retryHandler.postDelayed(this::injectNativeBridge, 3000);
     }
 
     private void requestNotificationPermission() {
@@ -89,34 +103,72 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private void setupWebView() {
-        if (bridge != null && bridge.getWebView() != null) {
+    /**
+     * Injects the MusiiNative JavaScript interface into the Capacitor WebView.
+     * Called multiple times with increasing delays to handle the race condition
+     * where Capacitor's bridge/WebView is not yet fully initialized during onCreate.
+     */
+    private void injectNativeBridge() {
+        if (nativeBridgeInjected) return;
+
+        try {
+            if (bridge == null) {
+                Log.d(TAG, "injectNativeBridge: bridge is null, will retry");
+                return;
+            }
+
             WebView webView = bridge.getWebView();
+            if (webView == null) {
+                Log.d(TAG, "injectNativeBridge: WebView is null, will retry");
+                return;
+            }
+
             WebSettings settings = webView.getSettings();
             settings.setMediaPlaybackRequiresUserGesture(false);
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
 
-            // Register native bridge for background audio & media notifications
+            // Register the native bridge for background audio and media notifications
             webView.addJavascriptInterface(new MusiiNativeBridge(), "MusiiNative");
+            nativeBridgeInjected = true;
+            Log.d(TAG, "injectNativeBridge: MusiiNative bridge INJECTED SUCCESSFULLY");
+
+            // Confirm injection to the JS side
+            webView.post(() -> {
+                webView.evaluateJavascript(
+                    "console.log('[MUSII] Native bridge injected: ' + (typeof window.MusiiNative !== 'undefined'));",
+                    null
+                );
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "injectNativeBridge: Exception - " + e.getMessage());
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        activeInstance = this;
+        // Re-inject on every start in case the WebView was recreated
+        injectNativeBridge();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         activeInstance = this;
-        setupWebView();
+        injectNativeBridge();
     }
 
     @Override
     public void onPause() {
-        // Keep webview running continuously so background audio playback never stops on Samsung devices
+        // Do NOT stop WebView -- keep background audio alive on Samsung One UI
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
+        retryHandler.removeCallbacksAndMessages(null);
         if (activeInstance == this) {
             activeInstance = null;
         }
@@ -126,6 +178,7 @@ public class MainActivity extends BridgeActivity {
     public class MusiiNativeBridge {
         @JavascriptInterface
         public void playStream(String streamUrl, String title, String artist, String coverUrl, double durationSec) {
+            Log.d(TAG, "playStream called: " + title + " by " + artist);
             requestNotificationPermission();
             Intent intent = new Intent(MainActivity.this, MusiiMediaService.class);
             intent.setAction(MusiiMediaService.ACTION_PLAY_STREAM);
@@ -140,7 +193,8 @@ public class MainActivity extends BridgeActivity {
                 } else {
                     startService(intent);
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e(TAG, "playStream: Failed to start service - " + e.getMessage());
             }
         }
 
@@ -150,7 +204,8 @@ public class MainActivity extends BridgeActivity {
             intent.setAction(MusiiMediaService.ACTION_PAUSE);
             try {
                 startService(intent);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e(TAG, "pauseAudio: " + e.getMessage());
             }
         }
 
@@ -160,7 +215,8 @@ public class MainActivity extends BridgeActivity {
             intent.setAction(MusiiMediaService.ACTION_PLAY);
             try {
                 startService(intent);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e(TAG, "resumeAudio: " + e.getMessage());
             }
         }
 
@@ -171,7 +227,8 @@ public class MainActivity extends BridgeActivity {
             intent.putExtra(MusiiMediaService.EXTRA_POSITION, (long)(seconds * 1000));
             try {
                 startService(intent);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e(TAG, "seekAudio: " + e.getMessage());
             }
         }
 
@@ -197,7 +254,8 @@ public class MainActivity extends BridgeActivity {
                 } else {
                     startService(intent);
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e(TAG, "updateNotification: " + e.getMessage());
             }
         }
 
@@ -207,7 +265,8 @@ public class MainActivity extends BridgeActivity {
             intent.setAction(MusiiMediaService.ACTION_STOP);
             try {
                 startService(intent);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e(TAG, "stopNotification: " + e.getMessage());
             }
         }
 

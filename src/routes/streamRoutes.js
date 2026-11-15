@@ -19,7 +19,8 @@ router.get('/url', async (req, res, next) => {
 });
 
 // Stream audio directly via server proxy with HTTP Range support
-// Eliminates YouTube IP-binding 403 blocks on mobile and enables instant bufferless playback
+// Pipes ALL audio through the server to avoid YouTube IP-binding 403 blocks on mobile.
+// NEVER redirect the client to googlevideo URLs -- those are IP-bound to the server.
 router.get('/play', async (req, res, next) => {
   try {
     const query = req.query.q || req.query.query;
@@ -28,7 +29,6 @@ router.get('/play', async (req, res, next) => {
     }
     const streamUrl = await streamingService.getStreamUrl(query);
 
-    const client = streamUrl.startsWith('https') ? https : http;
     const requestHeaders = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': '*/*',
@@ -39,36 +39,48 @@ router.get('/play', async (req, res, next) => {
       requestHeaders['Range'] = req.headers.range;
     }
 
-    const proxyReq = client.get(streamUrl, { headers: requestHeaders }, (proxyRes) => {
-      if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
-        return res.redirect(proxyRes.statusCode, proxyRes.headers.location);
+    // Helper: fetch a URL and follow redirects server-side (up to 5 hops)
+    const pipeStream = (url, hops) => {
+      if (hops > 5) {
+        if (!res.headersSent) res.status(502).send('Too many redirects');
+        return;
       }
+      const client = url.startsWith('https') ? https : http;
+      const proxyReq = client.get(url, { headers: requestHeaders }, (proxyRes) => {
+        // Follow redirects on the server side -- never pass IP-bound URLs to the client
+        if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
+          proxyRes.resume(); // drain the response body
+          return pipeStream(proxyRes.headers.location, hops + 1);
+        }
 
-      res.status(proxyRes.statusCode);
-      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'audio/webm');
-      res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Access-Control-Allow-Origin', '*');
+        res.status(proxyRes.statusCode);
+        res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'audio/webm');
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Access-Control-Allow-Origin', '*');
 
-      if (proxyRes.headers['content-range']) {
-        res.setHeader('Content-Range', proxyRes.headers['content-range']);
-      }
-      if (proxyRes.headers['content-length']) {
-        res.setHeader('Content-Length', proxyRes.headers['content-length']);
-      }
+        if (proxyRes.headers['content-range']) {
+          res.setHeader('Content-Range', proxyRes.headers['content-range']);
+        }
+        if (proxyRes.headers['content-length']) {
+          res.setHeader('Content-Length', proxyRes.headers['content-length']);
+        }
 
-      proxyRes.pipe(res);
-    });
+        proxyRes.pipe(res);
+      });
 
-    proxyReq.on('error', (err) => {
-      console.error('[StreamProxy] Proxy pipe error:', err.message);
-      if (!res.headersSent) {
-        res.redirect(302, streamUrl);
-      }
-    });
+      proxyReq.on('error', (err) => {
+        console.error('[StreamProxy] Proxy pipe error:', err.message);
+        if (!res.headersSent) {
+          res.status(502).send('Stream proxy error');
+        }
+      });
 
-    req.on('close', () => {
-      proxyReq.destroy();
-    });
+      req.on('close', () => {
+        proxyReq.destroy();
+      });
+    };
+
+    pipeStream(streamUrl, 0);
   } catch (err) {
     console.error('[StreamProxy] Error:', err.message);
     res.status(500).send('Stream error: ' + err.message);

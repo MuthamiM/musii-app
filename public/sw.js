@@ -1,4 +1,4 @@
-const CACHE_NAME = 'musii-cache-v1.9.8';
+const CACHE_NAME = 'musii-cache-v1.9.9';
 const AUDIO_CACHE_NAME = 'musii-audio-cache-v1';
 
 const ASSETS_TO_CACHE = [

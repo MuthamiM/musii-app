@@ -22,6 +22,7 @@ import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
@@ -30,6 +31,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class MusiiMediaService extends Service {
+    private static final String TAG = "MUSII_Service";
+
     public static final String ACTION_PLAY_STREAM = "com.musii.app.ACTION_PLAY_STREAM";
     public static final String ACTION_UPDATE = "com.musii.app.ACTION_UPDATE";
     public static final String ACTION_PLAY = "com.musii.app.ACTION_PLAY";
@@ -66,10 +69,12 @@ public class MusiiMediaService extends Service {
     private Bitmap cachedArtwork = null;
     private long currentDurationMs = 210000L;
     private long currentPositionMs = 0L;
+    private boolean isForegroundStarted = false;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate: Service starting");
         createNotificationChannel();
         initMediaSession();
         initAudioManager();
@@ -103,6 +108,7 @@ public class MusiiMediaService extends Service {
         mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
         mediaPlayer.setOnPreparedListener(mp -> {
+            Log.d(TAG, "onPrepared: MediaPlayer ready, starting playback");
             mp.start();
             isPlaying = true;
             if (mp.getDuration() > 0) {
@@ -110,24 +116,26 @@ public class MusiiMediaService extends Service {
             }
             acquireWakeLock();
             updatePlaybackState();
-            updateNotification();
+            pushNotification();
             startProgressTracker();
             MainActivity.dispatchMediaAction("native_playing");
         });
 
         mediaPlayer.setOnCompletionListener(mp -> {
+            Log.d(TAG, "onCompletion: Track finished");
             isPlaying = false;
             stopProgressTracker();
             updatePlaybackState();
-            updateNotification();
+            pushNotification();
             MainActivity.dispatchMediaAction("next");
         });
 
         mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+            Log.e(TAG, "onError: what=" + what + " extra=" + extra);
             isPlaying = false;
             stopProgressTracker();
             updatePlaybackState();
-            updateNotification();
+            pushNotification();
             return false;
         });
     }
@@ -231,6 +239,7 @@ public class MusiiMediaService extends Service {
             public void onStop() {
                 pausePlayback();
                 stopForeground(true);
+                isForegroundStarted = false;
                 stopSelf();
             }
 
@@ -263,10 +272,14 @@ public class MusiiMediaService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null || intent.getAction() == null) {
+            // CRITICAL: Even with null intent, if we were started as foreground service,
+            // we MUST call startForeground immediately to avoid ANR/crash on Android 14+
+            ensureForeground();
             return START_STICKY;
         }
 
         String action = intent.getAction();
+        Log.d(TAG, "onStartCommand: action=" + action);
 
         if (ACTION_PLAY_STREAM.equals(action)) {
             String streamUrl = intent.getStringExtra(EXTRA_STREAM_URL);
@@ -277,12 +290,20 @@ public class MusiiMediaService extends Service {
             currentDurationMs = intent.getLongExtra(EXTRA_DURATION, 210000L);
             String newCoverUrl = intent.getStringExtra(EXTRA_COVER_URL);
 
+            // CRITICAL: Call startForeground IMMEDIATELY before any async work.
+            // On Android 14+ (SDK 34+), failing to call startForeground within ~10s
+            // of startForegroundService() causes a ForegroundServiceDidNotStartInTimeException
+            // and the service is killed silently. This is the #1 reason Samsung users
+            // never see a notification and audio dies on app close.
+            ensureForeground();
+
             if (newCoverUrl != null && !newCoverUrl.equals(currentCoverUrl)) {
                 currentCoverUrl = newCoverUrl;
                 loadArtworkAsync(currentCoverUrl);
             }
 
             playStreamUrl(streamUrl);
+
         } else if (ACTION_UPDATE.equals(action)) {
             currentTitle = intent.getStringExtra(EXTRA_TITLE);
             if (currentTitle == null || currentTitle.isEmpty()) currentTitle = "MUSII";
@@ -293,12 +314,15 @@ public class MusiiMediaService extends Service {
             currentPositionMs = intent.getLongExtra(EXTRA_POSITION, currentPositionMs);
             String newCoverUrl = intent.getStringExtra(EXTRA_COVER_URL);
 
+            // Must call startForeground since this may arrive via startForegroundService
+            ensureForeground();
+
             if (newCoverUrl != null && !newCoverUrl.equals(currentCoverUrl)) {
                 currentCoverUrl = newCoverUrl;
                 loadArtworkAsync(currentCoverUrl);
             } else {
                 updatePlaybackState();
-                updateNotification();
+                pushNotification();
             }
         } else if (ACTION_PLAY.equals(action)) {
             resumePlayback();
@@ -315,10 +339,37 @@ public class MusiiMediaService extends Service {
             pausePlayback();
             releaseWakeLock();
             stopForeground(true);
+            isForegroundStarted = false;
             stopSelf();
         }
 
         return START_STICKY;
+    }
+
+    /**
+     * Guarantees that startForeground has been called at least once.
+     * Must be called IMMEDIATELY in onStartCommand for any action triggered
+     * by startForegroundService(), before any async work (prepareAsync, network, etc).
+     */
+    private void ensureForeground() {
+        Notification notification = buildNotification();
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+            } else {
+                startForeground(NOTIFICATION_ID, notification);
+            }
+            isForegroundStarted = true;
+            Log.d(TAG, "ensureForeground: Foreground started with notification");
+        } catch (Exception e) {
+            Log.e(TAG, "ensureForeground: FAILED - " + e.getMessage());
+            try {
+                startForeground(NOTIFICATION_ID, notification);
+                isForegroundStarted = true;
+            } catch (Exception e2) {
+                Log.e(TAG, "ensureForeground: Fallback also failed - " + e2.getMessage());
+            }
+        }
     }
 
     private void playStreamUrl(String url) {
@@ -333,8 +384,8 @@ public class MusiiMediaService extends Service {
             mediaPlayer.setDataSource(url);
             mediaPlayer.prepareAsync();
             updatePlaybackState();
-            updateNotification();
         } catch (Exception e) {
+            Log.e(TAG, "playStreamUrl: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -351,7 +402,7 @@ public class MusiiMediaService extends Service {
         isPlaying = true;
         startProgressTracker();
         updatePlaybackState();
-        updateNotification();
+        pushNotification();
         MainActivity.dispatchMediaAction("play");
     }
 
@@ -368,7 +419,7 @@ public class MusiiMediaService extends Service {
         stopProgressTracker();
         releaseWakeLock();
         updatePlaybackState();
-        updateNotification();
+        pushNotification();
         MainActivity.dispatchMediaAction("pause");
     }
 
@@ -442,15 +493,20 @@ public class MusiiMediaService extends Service {
                 conn.connect();
                 InputStream input = conn.getInputStream();
                 bmp = BitmapFactory.decodeStream(input);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.w(TAG, "loadArtworkAsync: " + e.getMessage());
             }
             cachedArtwork = bmp;
             updatePlaybackState();
-            updateNotification();
+            pushNotification();
         }).start();
     }
 
-    private void updateNotification() {
+    /**
+     * Builds the media notification without posting it.
+     * Used by ensureForeground() for the immediate startForeground call.
+     */
+    private Notification buildNotification() {
         Intent contentIntent = new Intent(this, MainActivity.class);
         contentIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pContent = PendingIntent.getActivity(
@@ -505,30 +561,44 @@ public class MusiiMediaService extends Service {
             builder.setLargeIcon(cachedArtwork);
         }
 
-        Notification notification = builder.build();
+        return builder.build();
+    }
+
+    /**
+     * Updates the notification. Only used AFTER ensureForeground() has been called at least once.
+     */
+    private void pushNotification() {
+        Notification notification = buildNotification();
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
             } else {
                 startForeground(NOTIFICATION_ID, notification);
             }
+            isForegroundStarted = true;
         } catch (Exception e) {
-            startForeground(NOTIFICATION_ID, notification);
+            Log.e(TAG, "pushNotification: " + e.getMessage());
+            try {
+                startForeground(NOTIFICATION_ID, notification);
+            } catch (Exception ignored) {
+            }
         }
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        // Keep playing music even when user swipes away app from recents
+        // Keep playing music even when user swipes away app from recents on Samsung One UI
         if (isPlaying) {
-            // Keep service alive
+            Log.d(TAG, "onTaskRemoved: Still playing, keeping service alive");
             return;
         }
+        Log.d(TAG, "onTaskRemoved: Not playing, stopping service");
         super.onTaskRemoved(rootIntent);
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy: Service shutting down");
         stopProgressTracker();
         releaseWakeLock();
         if (mediaPlayer != null) {

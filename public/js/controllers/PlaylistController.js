@@ -756,7 +756,10 @@ class PlaylistController {
     };
 
     this.container.innerHTML = this.playlists.map((pl) => {
-      const cover = defaultCovers[pl.id] || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+      const cover = (pl.tracks && pl.tracks[0] && (pl.tracks[0].cover_art || pl.tracks[0].thumbnail))
+        || pl.cover_art
+        || defaultCovers[pl.id]
+        || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
       return `
       <div class="playlist-card touch-spring" data-id="${pl.id}" style="padding:14px; border-radius:20px; background:var(--bg-surface); border:1px solid var(--line-strong); box-shadow:inset 0 1px 1px rgba(255,255,255,0.18); backdrop-filter:blur(20px); cursor:pointer;">
         <div style="width:100%; aspect-ratio:1; border-radius:14px; overflow:hidden; margin-bottom:10px; box-shadow:0 8px 18px rgba(0,0,0,0.5);">
