@@ -21,6 +21,11 @@ class AudioController {
     this.audio = new Audio();
     this.audio.preload = 'auto';
 
+    // Global reference for native Android notification media actions
+    if (typeof window !== 'undefined') {
+      window.audioController = this;
+    }
+
     this.initAudioListeners();
   }
 
@@ -361,7 +366,24 @@ class AudioController {
   }
 
   updateMediaSession(track) {
-    if (!track || !('mediaSession' in navigator)) return;
+    if (!track) return;
+
+    // Bridge with native Android Foreground Service & Notification Banner
+    if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.updateNotification === 'function') {
+      try {
+        const coverUrl = track.cover_art || track.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+        window.MusiiNative.updateNotification(
+          track.title || 'MUSII',
+          track.artist || 'Playing Stream',
+          Boolean(this.isPlaying),
+          coverUrl
+        );
+      } catch (e) {
+        console.warn('[AudioController] Native notification bridge error:', e);
+      }
+    }
+
+    if (!('mediaSession' in navigator)) return;
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,

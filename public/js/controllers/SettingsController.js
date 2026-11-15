@@ -2,6 +2,7 @@ import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
 import { audioController } from './AudioController.js';
 import { navigationController } from './NavigationController.js';
+import { playlistController } from './PlaylistController.js';
 import { apiUrl } from '../constants/api.js';
 
 class SettingsController {
@@ -163,7 +164,14 @@ class SettingsController {
           audioController.selectTrack(0, true);
           errorHandler.showToast(`Imported "${newTrack.title}" by ${newTrack.artist}`);
         } else if (data.data.type === 'playlist') {
-          errorHandler.showToast(data.data.message || 'Playlist imported');
+          if (data.data.playlist) {
+            playlistController.playlists.unshift(data.data.playlist);
+            playlistController.saveLocalPlaylists();
+            playlistController.render();
+          } else {
+            playlistController.fetchPlaylists();
+          }
+          errorHandler.showToast(data.data.message || 'Playlist imported as new playlist');
         }
       } else {
         throw new Error(data.error || 'Import failed');
