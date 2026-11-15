@@ -97,7 +97,27 @@ class LyricsService {
       });
     });
   }
+
+  async prewarm(tracks = []) {
+    for (const t of tracks) {
+      try {
+        await this.getLyrics(t);
+        console.log('[LyricsService] Pre-warmed lyrics cache for:', t.title);
+      } catch (e) {}
+    }
+  }
 }
 
-module.exports = new LyricsService();
+const lyricsServiceInstance = new LyricsService();
+// Pre-warm top lyrics in background for zero delay
+setTimeout(() => {
+  lyricsServiceInstance.prewarm([
+    { title: 'Make No Sense', artist: 'YoungBoy Never Broke Again', duration: 148 },
+    { title: 'Lonely Child', artist: 'YoungBoy Never Broke Again', duration: 217 },
+    { title: 'Hot Now', artist: 'YoungBoy Never Broke Again', duration: 128 },
+    { title: 'Natural Mystic', artist: 'Bob Marley & The Wailers', duration: 206 }
+  ]).catch(() => {});
+}, 1500);
+
+module.exports = lyricsServiceInstance;
 

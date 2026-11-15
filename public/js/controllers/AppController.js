@@ -105,10 +105,10 @@ class AppController {
     const scroller = document.getElementById('topPicksScroller');
     if (!scroller) return;
 
-    scroller.innerHTML = this.picks.map((pick) => {
+    scroller.innerHTML = this.picks.map((pick, i) => {
       const coverUrl = pick.image || (this.tracks.find(t => t.id === (pick.trackId || pick.track_id)) || {}).cover_art || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
       return `
-      <div class="music-card touch-spring" data-track-id="${pick.trackId || pick.track_id || 1}">
+      <div class="music-card touch-spring" data-pick-idx="${i}">
         <img class="music-card-bg-img" src="${coverUrl}" alt="${pick.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'" />
         <div class="music-card-overlay"></div>
 
@@ -132,39 +132,124 @@ class AppController {
     }).join('');
   }
 
+  // Render Recently Played as a horizontal shelf matching user requirement
   renderRecentTracks() {
     const container = document.getElementById('recentTracksList');
     if (!container) return;
 
     container.innerHTML = this.tracks.map((track, i) => `
-      <div class="track-row touch-spring ${i === 0 ? 'now-playing' : ''}" data-idx="${i}">
-        <div class="track-avatar">
-          <img class="track-avatar-img" src="${track.cover_art}" alt="${track.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'" />
-        </div>
-        <div class="track-meta">
-          <span class="track-name">${track.title}</span>
-          <span class="track-artist">${track.artist} • ${track.album}</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <button class="track-row-btn-queue touch-spring" data-track-idx="${i}" title="Add to Queue" style="background:none; border:none; color:rgba(255,255,255,0.45); padding:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;" aria-label="Add to Queue">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-          <div class="track-btn-play">
-            <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text-muted)"><polygon points="8 5 19 12 8 19 8 5" fill="currentColor" stroke="none"></polygon></svg>
+      <div class="recent-card-item touch-spring ${i === audioController.currentIdx ? 'now-playing' : ''}" data-idx="${i}">
+        <div class="recent-card-cover-wrapper">
+          <img class="recent-card-cover" src="${track.cover_art}" alt="${track.title}" loading="lazy" onerror="this.src='https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'" />
+          <div class="recent-card-overlay"></div>
+          <div class="recent-card-play-pill">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
           </div>
         </div>
+        <div class="recent-card-title">${track.title}</div>
+        <div class="recent-card-artist">${track.artist}</div>
       </div>
     `).join('');
 
-    container.querySelectorAll('.track-row-btn-queue').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = parseInt(btn.dataset.trackIdx, 10);
-        if (this.tracks[idx]) {
-          audioController.addToQueue(this.tracks[idx]);
+    container.querySelectorAll('.recent-card-item').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.idx, 10);
+        if (idx === audioController.currentIdx && audioController.isPlaying) {
+          audioController.pause();
+        } else {
+          audioController.selectTrack(idx, true);
         }
       });
     });
+  }
+
+  openCardDetails(pick) {
+    haptics.trigger('medium');
+    const modal = document.getElementById('cardDetailsModal');
+    if (!modal) return;
+
+    const coverEl = document.getElementById('cardModalCover');
+    const tagEl = document.getElementById('cardModalTag');
+    const titleEl = document.getElementById('cardModalTitle');
+    const subtitleEl = document.getElementById('cardModalSubtitle');
+    const listEl = document.getElementById('cardModalTracksList');
+
+    const coverUrl = pick.image || (this.tracks.find(t => t.id === (pick.trackId || pick.track_id)) || {}).cover_art || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+
+    if (coverEl) coverEl.src = coverUrl;
+    if (tagEl) tagEl.textContent = pick.category || 'Featured Collection';
+    if (titleEl) titleEl.textContent = pick.title;
+    if (subtitleEl) subtitleEl.textContent = pick.subtitle;
+
+    // Filter tracks belonging to this card/category or find matching tracks
+    let cardTracks = this.tracks.filter(t => 
+      (t.category && pick.category && t.category.toLowerCase().includes(pick.category.toLowerCase())) ||
+      (pick.badge && t.artist && t.artist.toLowerCase().includes(pick.badge.toLowerCase())) ||
+      (t.album && pick.title && t.album.toLowerCase().includes(pick.title.toLowerCase()))
+    );
+
+    if (cardTracks.length === 0) {
+      const matchTrack = this.tracks.find(t => t.id === (pick.trackId || pick.track_id));
+      cardTracks = matchTrack ? [matchTrack, ...this.tracks.filter(t => t.id !== matchTrack.id).slice(0, 4)] : this.tracks.slice(0, 5);
+    }
+
+    if (listEl) {
+      listEl.innerHTML = cardTracks.map((track) => `
+        <div class="track-row touch-spring" data-track-id="${track.id}" style="padding:8px 12px; background:rgba(255,255,255,0.04); border-radius:14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+            <img src="${track.cover_art}" style="width:42px; height:42px; border-radius:10px; object-fit:cover;">
+            <div style="overflow:hidden;">
+              <div style="font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${track.title}</div>
+              <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${track.artist}</div>
+            </div>
+          </div>
+          <button class="btn-play-card-track" data-track-id="${track.id}" style="background:rgba(230,57,70,0.15); border:1px solid rgba(230,57,70,0.3); border-radius:999px; color:var(--accent); font-size:12px; font-weight:700; padding:6px 12px; cursor:pointer;">
+            Play
+          </button>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.track-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const trackId = parseInt(row.dataset.trackId, 10);
+          const idx = this.tracks.findIndex(t => t.id === trackId);
+          modal.classList.remove('is-open');
+          audioController.selectTrack(idx >= 0 ? idx : 0, true);
+        });
+      });
+    }
+
+    const btnPlayAll = document.getElementById('btnCardModalPlayAll');
+    if (btnPlayAll) {
+      btnPlayAll.onclick = () => {
+        modal.classList.remove('is-open');
+        if (cardTracks.length > 0) {
+          const firstIdx = this.tracks.findIndex(t => t.id === cardTracks[0].id);
+          audioController.selectTrack(firstIdx >= 0 ? firstIdx : 0, true);
+          for (let i = 1; i < cardTracks.length; i++) {
+            audioController.addToQueue(cardTracks[i]);
+          }
+        }
+      };
+    }
+
+    const btnQueueAll = document.getElementById('btnCardModalQueueAll');
+    if (btnQueueAll) {
+      btnQueueAll.onclick = () => {
+        modal.classList.remove('is-open');
+        cardTracks.forEach(t => audioController.addToQueue(t));
+      };
+    }
+
+    const btnClose = document.getElementById('btnCloseCardModal');
+    if (btnClose) {
+      btnClose.onclick = () => modal.classList.remove('is-open');
+    }
+    modal.onclick = (e) => {
+      if (e.target === modal) modal.classList.remove('is-open');
+    };
+
+    modal.classList.add('is-open');
   }
 
   bindAudioEvents() {
@@ -189,8 +274,14 @@ class AppController {
       const sheetIcon = document.getElementById('iconSheetPlayPause');
       if (sheetIcon) sheetIcon.innerHTML = isPlaying ? PAUSE_SVG : PLAY_SVG;
 
+      const sheetPlayer = document.getElementById('fullscreenPlayerSheet');
+      if (sheetPlayer) sheetPlayer.classList.toggle('is-playing', isPlaying);
+
       const orb = document.getElementById('ambientBackdropOrb');
-      if (orb && track.gradient) orb.style.background = track.gradient;
+      if (orb) {
+        if (track.gradient) orb.style.background = track.gradient;
+        orb.classList.toggle('is-playing', isPlaying);
+      }
 
       const sheetTitle = document.getElementById('sheetTrackTitle');
       const sheetArtist = document.getElementById('sheetTrackArtist');
@@ -203,6 +294,14 @@ class AppController {
       const sheetTotal = document.getElementById('sheetTotalTime');
       if (sheetTotal) sheetTotal.textContent = audioController.formatTime(track.duration);
 
+      // Update active state in horizontal recently played cards
+      document.querySelectorAll('.recent-card-item').forEach((card, idx) => {
+        const isCurrent = idx === audioController.currentIdx;
+        card.classList.toggle('now-playing', isCurrent);
+        card.classList.toggle('is-playing', isCurrent && isPlaying);
+      });
+
+      // Update active state in any track rows
       document.querySelectorAll('.track-row').forEach((row, idx) => {
         const isCurrent = idx === audioController.currentIdx;
         row.classList.toggle('now-playing', isCurrent);
@@ -407,30 +506,15 @@ class AppController {
       });
     }
 
+    // Top picks card click: opens all songs inside that card
     const picksScroller = document.getElementById('topPicksScroller');
     if (picksScroller) {
       picksScroller.addEventListener('click', e => {
         const card = e.target.closest('.music-card');
         if (card) {
-          const trackId = parseInt(card.dataset.trackId, 10);
-          const idx = this.tracks.findIndex(t => t.id === trackId);
-          audioController.selectTrack(idx >= 0 ? idx : 0, true);
-        }
-      });
-    }
-
-    const recentList = document.getElementById('recentTracksList');
-    if (recentList) {
-      recentList.addEventListener('click', e => {
-        if (e.target.closest('.track-row-btn-queue')) return;
-        const row = e.target.closest('.track-row');
-        if (row) {
-          const idx = parseInt(row.dataset.idx, 10);
-          if (idx === audioController.currentIdx && audioController.isPlaying) {
-            audioController.pause();
-          } else {
-            audioController.selectTrack(idx, true);
-          }
+          const pickIdx = parseInt(card.dataset.pickIdx, 10);
+          const pick = this.picks[pickIdx] || this.picks[0];
+          this.openCardDetails(pick);
         }
       });
     }

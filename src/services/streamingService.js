@@ -82,6 +82,26 @@ class StreamingService {
       });
     });
   }
+
+  async prewarm(queries = []) {
+    for (const q of queries) {
+      try {
+        await this.getStreamUrl(q);
+        console.log('[StreamingService] Pre-warmed audio cache for:', q);
+      } catch (e) {}
+    }
+  }
 }
 
-module.exports = new StreamingService();
+const service = new StreamingService();
+// Pre-warm featured tracks in background for instant zero-delay playback
+setTimeout(() => {
+  service.prewarm([
+    'YoungBoy Never Broke Again Make No Sense',
+    'YoungBoy Never Broke Again Lonely Child',
+    'YoungBoy Never Broke Again Hot Now',
+    'Bob Marley Natural Mystic'
+  ]).catch(() => {});
+}, 1000);
+
+module.exports = service;

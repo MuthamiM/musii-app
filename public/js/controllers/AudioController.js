@@ -31,6 +31,16 @@ class AudioController {
       }
       this.notifyProgress();
       this.checkLyricsSync();
+
+      if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: Math.max(1, this.duration),
+            playbackRate: 1,
+            position: Math.min(this.currentTime, Math.max(1, this.duration))
+          });
+        } catch (e) {}
+      }
     });
 
     this.audio.addEventListener('ended', () => {
@@ -43,11 +53,13 @@ class AudioController {
 
     this.audio.addEventListener('play', () => {
       this.isPlaying = true;
+      this.updateMediaSession(this.getCurrentTrack());
       this.notify();
     });
 
     this.audio.addEventListener('pause', () => {
       this.isPlaying = false;
+      this.updateMediaSession(this.getCurrentTrack());
       this.notify();
     });
   }
@@ -315,6 +327,36 @@ class AudioController {
       }
     });
     window.dispatchEvent(progressEvent);
+  }
+
+  updateMediaSession(track) {
+    if (!track || !('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist,
+        album: track.album || 'MUSII',
+        artwork: [
+          { src: track.cover_art || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg', sizes: '512x512', type: 'image/jpeg' }
+        ]
+      });
+
+      navigator.mediaSession.playbackState = this.isPlaying ? 'playing' : 'paused';
+
+      const setAction = (action, handler) => {
+        try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) {}
+      };
+
+      setAction('play', () => this.play());
+      setAction('pause', () => this.pause());
+      setAction('previoustrack', () => this.prev());
+      setAction('nexttrack', () => this.next());
+      setAction('seekto', (details) => {
+        if (details.seekTime !== undefined) this.seekTo(details.seekTime);
+      });
+      setAction('seekbackward', () => this.seekTo(Math.max(0, this.currentTime - 10)));
+      setAction('seekforward', () => this.seekTo(Math.min(this.duration, this.currentTime + 10)));
+    } catch (e) {}
   }
 }
 

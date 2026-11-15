@@ -152,7 +152,7 @@
         Recently Played
         <span style="font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer;">History</span>
       </h2>
-      <div style="display:flex; flex-direction:column; gap:8px;" id="recentTracksList"></div>
+      <div class="recently-played-scroller" id="recentTracksList"></div>
     </section>
 
     <!-- VIEW 2: PLAYLIST VIEW -->
@@ -766,6 +766,35 @@
       <button class="transport-btn-skip" id="btnSheetNext" aria-label="Next">
         <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- TOP PICK CARD SONGS MODAL (Opens songs inside card) -->
+  <div class="modal-backdrop" id="cardDetailsModal" style="z-index: 480;">
+    <div class="modal-card" style="max-height: 82vh; display:flex; flex-direction:column; width:100%; max-width:420px; padding:22px; background:rgba(18,18,26,0.96); border:1px solid rgba(255,255,255,0.16); border-radius:26px; backdrop-filter:blur(36px); box-shadow:0 30px 80px rgba(0,0,0,0.85);">
+      <div style="display:flex; gap:16px; align-items:center; margin-bottom:18px;">
+        <img id="cardModalCover" src="" alt="Cover" style="width:72px; height:72px; border-radius:16px; object-fit:cover; box-shadow:0 8px 24px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.15);">
+        <div style="flex:1; overflow:hidden;">
+          <span id="cardModalTag" style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent);">FEATURED</span>
+          <h3 id="cardModalTitle" style="margin:2px 0 3px; font-size:18px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Card Title</h3>
+          <p id="cardModalSubtitle" style="margin:0; font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Artist • Album</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
+        <button id="btnCardModalPlayAll" style="flex:1; padding:10px 16px; border-radius:12px; background:var(--grad-fire); border:none; color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; box-shadow:0 6px 18px var(--accent-glow);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
+          Play All
+        </button>
+        <button id="btnCardModalQueueAll" style="padding:10px 14px; border-radius:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:13px; font-weight:600; cursor:pointer;">
+          Queue All
+        </button>
+      </div>
+      <div id="cardModalTracksList" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; min-height:100px; max-height:340px; padding-right:4px;">
+        <!-- Card tracks rendered dynamically -->
+      </div>
+      <div class="modal-actions" style="margin-top:14px;">
+        <button class="btn-modal-secondary" id="btnCloseCardModal" style="width:100%; padding:11px; border-radius:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#fff; font-weight:600; cursor:pointer;">Close</button>
+      </div>
     </div>
   </div>
 

@@ -23,7 +23,65 @@
 
 @keyframes eqBounce {
   0% { height: 25%; }
-  100% { height: 100%; }
+  50% { height: 95%; }
+  100% { height: 40%; }
+}
+
+@keyframes spinDisc {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes coverBreathing {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.7);
+  }
+  50% {
+    transform: scale(1.025);
+    box-shadow: 0 24px 64px -6px var(--accent-glow);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.7);
+  }
+}
+
+@keyframes ambientPulse {
+  0% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.18);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.35;
+  }
+}
+
+/* Continuous Playback Animation Classes */
+.floating-mini-player.is-playing .mini-thumb-img {
+  animation: spinDisc 14s linear infinite;
+}
+
+.fullscreen-player-sheet.is-playing .sheet-cover-container {
+  animation: coverBreathing 4.5s ease-in-out infinite;
+}
+
+.glass-glow-orb.is-playing {
+  animation: ambientPulse 6s ease-in-out infinite;
+}
+
+.recent-card-item.is-playing .recent-card-cover {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px var(--accent-glow);
 }
 
 @keyframes pulseGlow {
