@@ -170,6 +170,21 @@ function initSchema() {
     initTables();
     seedDatabase();
   }
+
+  // Ensure default playlists always have tracks populated
+  try {
+    const ptCount = db.prepare('SELECT COUNT(*) as count FROM playlist_tracks').get().count;
+    if (ptCount === 0) {
+      const insertPT = db.prepare('INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id) VALUES (?, ?)');
+      [1, 2, 5, 9, 6].forEach(tid => insertPT.run('pl-liked', tid));
+      [1, 2, 3, 4].forEach(tid => insertPT.run('pl-road', tid));
+      [5, 6, 7, 8, 9].forEach(tid => insertPT.run('pl-focus', tid));
+
+      db.prepare('UPDATE playlists SET song_count = 5 WHERE id = "pl-liked"').run();
+      db.prepare('UPDATE playlists SET song_count = 4 WHERE id = "pl-road"').run();
+      db.prepare('UPDATE playlists SET song_count = 5 WHERE id = "pl-focus"').run();
+    }
+  } catch (e) {}
 }
 
 function seedDatabase() {

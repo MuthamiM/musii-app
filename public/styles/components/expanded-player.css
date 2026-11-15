@@ -192,7 +192,7 @@
 .lyrics-overlay-sheet {
   position: fixed;
   inset: 0;
-  z-index: 500;
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   background: #08080c;
@@ -336,10 +336,10 @@
 .playlist-detail-container {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 15, 0.96);
-  -webkit-backdrop-filter: blur(35px) saturate(190%);
-  backdrop-filter: blur(35px) saturate(190%);
-  z-index: 400;
+  background: rgba(10, 10, 15, 0.98);
+  -webkit-backdrop-filter: blur(40px) saturate(190%);
+  backdrop-filter: blur(40px) saturate(190%);
+  z-index: 8000;
   display: flex;
   flex-direction: column;
   padding: max(env(safe-area-inset-top), 20px) 20px max(env(safe-area-inset-bottom), 30px);

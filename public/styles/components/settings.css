@@ -1,11 +1,89 @@
-/* Settings View & Switch Controls */
+/**
+ * Samsung One UI & iOS Liquid Glass Settings / Profile Design
+ */
+
+/* Profile Header Section */
+.profile-hero-card {
+  padding: 24px 20px;
+  border-radius: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+.profile-avatar-squircle {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 14px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #2563eb, #1e1b4b);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+}
+
+.profile-stats-row {
+  display: flex;
+  margin: 18px 0 0;
+  padding: 14px 0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-stat-box {
+  flex: 1;
+  text-align: center;
+}
+
+.profile-stat-box:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-stat-val {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+}
+
+.profile-stat-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* One UI Section Title */
+.settings-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 24px 8px 10px;
+}
+
+/* One UI Grouped Card */
 .settings-card-group {
   background: var(--bg-surface);
   border: 1px solid var(--line-strong);
-  border-radius: 20px;
+  border-radius: 22px;
   overflow: hidden;
-  backdrop-filter: blur(24px);
-  margin-bottom: 20px;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  margin-bottom: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .settings-item-row {
@@ -15,14 +93,14 @@
   width: 100%;
   padding: 16px 18px;
   text-align: left;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background: transparent;
   color: #ffffff;
   border-left: none;
   border-right: none;
   border-top: none;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.18s ease;
   box-sizing: border-box;
 }
 
@@ -30,8 +108,8 @@
   border-bottom: none;
 }
 
-.settings-item-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+.settings-item-row:active {
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .settings-item-left {
@@ -41,21 +119,18 @@
 }
 
 .settings-icon-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  color: #ffffff;
 }
 
 .settings-icon-circle svg {
-  width: 18px;
-  height: 18px;
-  stroke: #ffffff;
-  fill: none;
-  stroke-width: 2;
+  width: 20px;
+  height: 20px;
 }
 
 .settings-item-title {
@@ -77,15 +152,15 @@
   align-items: center;
   gap: 8px;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 
-/* Green iOS / Android Toggle Switch */
+/* One UI / iOS Switch Control */
 .ios-switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 30px;
+  width: 48px;
+  height: 28px;
   flex-shrink: 0;
 }
 
@@ -100,7 +175,7 @@
   cursor: pointer;
   inset: 0;
   background-color: rgba(255, 255, 255, 0.16);
-  transition: 0.3s;
+  transition: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 34px;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -108,18 +183,18 @@
 .ios-slider:before {
   position: absolute;
   content: "";
-  height: 24px;
-  width: 24px;
+  height: 22px;
+  width: 22px;
   left: 2px;
   bottom: 2px;
   background-color: white;
-  transition: 0.3s;
+  transition: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 .ios-switch input:checked + .ios-slider {
-  background-color: #34c759;
+  background-color: #10b981;
 }
 
 .ios-switch input:checked + .ios-slider:before {
@@ -127,40 +202,35 @@
 }
 
 /* Badge tags */
-.settings-in-use-badge {
-  font-size: 10px;
+.settings-tag-pill {
+  font-size: 11px;
   font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
 }
 
-/* Synced Lyrics Highlighting */
-.synced-lyrics-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 180px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-  padding: 8px 4px;
-}
-
-.synced-lyric-item {
+/* Sign Out Button */
+.btn-signout-card {
+  width: 100%;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
   font-size: 15px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.38);
-  transition: color 0.25s, transform 0.25s, font-size 0.25s;
-  line-height: 1.4;
-}
-
-.synced-lyric-item.is-active {
-  color: #ffffff;
   font-weight: 700;
-  font-size: 17px;
-  transform: scale(1.03);
-  text-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.14s ease, background 0.14s ease;
+  margin-top: 12px;
+  margin-bottom: 40px;
 }
 
+.btn-signout-card:active {
+  transform: scale(0.98);
+  background: rgba(239, 68, 68, 0.22);
+}

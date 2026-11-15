@@ -126,13 +126,26 @@ class AudioController {
 
     const streamQuery = encodeURIComponent(`${track.artist || ''} ${track.title || ''}`.trim());
     const streamUrl = apiUrl(`/api/stream/play?q=${streamQuery}`);
-    if (this.audio.src !== streamUrl) {
-      this.audio.src = streamUrl;
-    }
-    try {
-      await this.audio.play();
-    } catch (err) {
-      console.warn('[AudioController] play failed:', err);
+
+    // If running in native Android app, play directly via Foreground Service MediaPlayer
+    if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.playStream === 'function') {
+      const coverUrl = track.cover_art || track.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+      window.MusiiNative.playStream(
+        streamUrl,
+        track.title || 'MUSII',
+        track.artist || 'Unknown Artist',
+        coverUrl,
+        Number(this.duration || 210)
+      );
+    } else {
+      if (this.audio.src !== streamUrl) {
+        this.audio.src = streamUrl;
+      }
+      try {
+        await this.audio.play();
+      } catch (err) {
+        console.warn('[AudioController] play failed:', err);
+      }
     }
 
     this.loadLyrics(track);
@@ -141,7 +154,26 @@ class AudioController {
 
   pause() {
     this.isPlaying = false;
-    this.audio.pause();
+    if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.pauseAudio === 'function') {
+      window.MusiiNative.pauseAudio();
+    } else {
+      this.audio.pause();
+    }
+    this.notify();
+  }
+
+  onNativeProgress(currentTime, duration) {
+    this.currentTime = Math.floor(currentTime);
+    if (duration && !isNaN(duration) && duration > 0) {
+      this.duration = Math.floor(duration);
+    }
+    this.notifyProgress();
+    this.checkLyricsSync();
+  }
+
+  onNativePlaying() {
+    this.isBuffering = false;
+    this.isPlaying = true;
     this.notify();
   }
 
@@ -150,7 +182,13 @@ class AudioController {
     if (this.isPlaying) {
       this.pause();
     } else {
-      this.play();
+      if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.resumeAudio === 'function') {
+        window.MusiiNative.resumeAudio();
+        this.isPlaying = true;
+        this.notify();
+      } else {
+        this.play();
+      }
     }
   }
 
@@ -265,10 +303,13 @@ class AudioController {
 
   seekTo(seconds) {
     haptics.trigger('light');
-    if (this.audio && !isNaN(seconds)) {
-      this.audio.currentTime = Math.max(0, Math.min(this.duration, seconds));
+    const clamped = Math.max(0, Math.min(this.duration, seconds));
+    if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.seekAudio === 'function') {
+      window.MusiiNative.seekAudio(clamped);
+    } else if (this.audio && !isNaN(clamped)) {
+      this.audio.currentTime = clamped;
     }
-    this.currentTime = Math.floor(seconds);
+    this.currentTime = Math.floor(clamped);
     this.notifyProgress();
     this.checkLyricsSync();
   }
@@ -368,7 +409,7 @@ class AudioController {
   updateMediaSession(track) {
     if (!track) return;
 
-    // Bridge with native Android Foreground Service & Notification Banner
+    // Bridge with native Android Foreground Service & Notification Banner (Samsung One UI / Android)
     if (typeof window !== 'undefined' && window.MusiiNative && typeof window.MusiiNative.updateNotification === 'function') {
       try {
         const coverUrl = track.cover_art || track.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
@@ -376,7 +417,9 @@ class AudioController {
           track.title || 'MUSII',
           track.artist || 'Playing Stream',
           Boolean(this.isPlaying),
-          coverUrl
+          coverUrl,
+          Number(this.duration || 210),
+          Number(this.currentTime || 0)
         );
       } catch (e) {
         console.warn('[AudioController] Native notification bridge error:', e);

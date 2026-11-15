@@ -235,7 +235,7 @@
         </button>
         <button class="touch-spring" id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Software Update</span>
-          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.6 Latest</span>
+          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.7 Latest</span>
         </button>
         <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Streaming Edge Mesh</span>
@@ -572,6 +572,9 @@
       <span class="mini-artist-info" id="miniTrackArtist">YoungBoy Never Broke Again • AI YoungBoy 2</span>
     </div>
     <div class="mini-actions" style="display:flex; align-items:center; gap:8px;">
+      <button class="sheet-icon-btn touch-spring" id="btnMiniLyrics" title="Synced Lyrics" aria-label="Lyrics" style="width:34px; height:34px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--accent-gold);">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="9" x2="16" y2="9"></line></svg>
+      </button>
       <button class="mini-play-btn" id="btnMiniPlayPause" aria-label="Play or Pause">
         <svg viewBox="0 0 24 24" id="iconMiniPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
       </button>
@@ -659,7 +662,7 @@
     <div class="update-dialog">
       <div class="update-dialog-header">
         <h3>Software Update</h3>
-        <p id="updateModalSubtitle">MUSII v1.9.6 is available to download.</p>
+        <p id="updateModalSubtitle">MUSII v1.9.7 is available to download.</p>
       </div>
 
       <div class="update-whats-new">
@@ -689,7 +692,7 @@
         </div>
 
         <div class="update-meta-block">
-          <h4 id="updateVersionBadge">v1.9.6 Release</h4>
+          <h4 id="updateVersionBadge">v1.9.7 Release</h4>
           <p id="updateNotesText">Instant search, persistent account recovery via email, and in-app update engine.</p>
           <span class="update-changelog-link" id="btnViewChangelog">View on GitHub</span>
         </div>
@@ -710,6 +713,13 @@
       </button>
       <span style="font-size:13px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted)">Now Playing</span>
       <div style="display:flex; align-items:center; gap:8px;">
+        <button class="sheet-icon-btn touch-spring" id="btnSheetLyrics" title="Synced Lyrics Overlay" aria-label="Lyrics" style="color:var(--accent-gold);">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <line x1="8" y1="9" x2="16" y2="9"></line>
+            <line x1="8" y1="13" x2="13" y2="13"></line>
+          </svg>
+        </button>
         <button class="sheet-icon-btn" id="btnSheetDownload" title="Download Song" aria-label="Download Song">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -879,7 +889,7 @@
   </div>
 
   <!-- PLAYLIST DETAIL MODAL (PERSISTENT PLAYLISTS, TRACK LISTING, RENAMING) -->
-  <div class="playlist-detail-container" id="playlistDetailModal" style="display:none;">
+  <div class="playlist-detail-container" id="playlistDetailModal">
     <div class="playlist-detail-header">
       <button class="sheet-icon-btn touch-spring" id="btnClosePlaylistDetail" aria-label="Close Playlist">
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -914,7 +924,7 @@
       <div class="playlist-detail-info" style="flex:1; overflow:hidden;">
         <h2 id="playlistDetailTitle" style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Playlist Name</h2>
         <p id="playlistDetailSubtitle" style="font-size:13px; color:var(--text-muted); margin:0 0 14px;">Curated Session • Saved in MUSII</p>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn-play-all-pill touch-spring" id="btnPlaylistPlayAll">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
             <span>Play All</span>
@@ -929,6 +939,10 @@
             </svg>
             <span>Shuffle</span>
           </button>
+          <button class="btn-shuffle-pill touch-spring" id="btnPlaylistAddSongs" style="background:rgba(16,185,129,0.18); border-color:rgba(16,185,129,0.3); color:#10b981;">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add Songs</span>
+          </button>
         </div>
       </div>
     </div>
@@ -936,6 +950,29 @@
     <!-- Playlist Tracks List -->
     <div class="playlist-detail-tracks" id="playlistDetailTracksList">
       <!-- Tracks rendered dynamically -->
+    </div>
+  </div>
+
+  <!-- ADD SONGS TO PLAYLIST MODAL -->
+  <div class="modal-backdrop" id="addSongsToPlaylistModal" style="z-index: 7000;">
+    <div class="modal-card" style="max-height: 85vh; display:flex; flex-direction:column; width:100%; max-width:440px; padding:20px; background:rgba(18,18,26,0.98); border:1px solid rgba(255,255,255,0.15); border-radius:24px; backdrop-filter:blur(30px); box-shadow:0 24px 60px rgba(0,0,0,0.85);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h3 class="modal-title" id="addSongsModalTitle" style="margin:0; font-size:18px; font-weight:700; color:#fff;">Add Songs to Playlist</h3>
+        <button id="btnCloseAddSongsModal" class="sheet-icon-btn touch-spring" style="width:34px; height:34px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Live Search Box -->
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--text-muted)" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="inputSearchAddSongs" placeholder="Search song or artist to add..." style="background:none; border:none; outline:none; color:#fff; font-size:14px; width:100%;">
+      </div>
+
+      <!-- Songs Results List -->
+      <div id="addSongsResultsContainer" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; min-height:160px; max-height:360px; padding-right:4px;">
+        <!-- Dynamically rendered tracks -->
+      </div>
     </div>
   </div>
 

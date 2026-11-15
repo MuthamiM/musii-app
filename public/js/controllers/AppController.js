@@ -350,6 +350,8 @@ class AppController {
     const btnCloseOverlay = document.getElementById('btnCloseLyricsOverlay');
     const btnOpenOverlay = document.getElementById('btnOpenLyricsOverlay');
     const cardLyricsPreview = document.getElementById('cardLyricsPreview');
+    const btnSheetLyrics = document.getElementById('btnSheetLyrics');
+    const btnMiniLyrics = document.getElementById('btnMiniLyrics');
 
     const openOverlay = () => {
       haptics.trigger('medium');
@@ -373,6 +375,8 @@ class AppController {
     };
 
     if (btnOpenOverlay) btnOpenOverlay.addEventListener('click', (e) => { e.stopPropagation(); openOverlay(); });
+    if (btnSheetLyrics) btnSheetLyrics.addEventListener('click', (e) => { e.stopPropagation(); openOverlay(); });
+    if (btnMiniLyrics) btnMiniLyrics.addEventListener('click', (e) => { e.stopPropagation(); openOverlay(); });
     if (cardLyricsPreview) cardLyricsPreview.addEventListener('click', () => openOverlay());
     if (btnCloseOverlay) btnCloseOverlay.addEventListener('click', () => closeOverlay());
 

@@ -1,6 +1,6 @@
 import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
-import { DEFAULT_PLAYLISTS } from '../constants/tracks.js';
+import { DEFAULT_PLAYLISTS, DEFAULT_TRACKS } from '../constants/tracks.js';
 import { GRADIENTS } from '../constants/colors.js';
 import { apiUrl } from '../constants/api.js';
 import { audioController } from './AudioController.js';
@@ -13,6 +13,7 @@ class PlaylistController {
     this.autoCacheEnabled = true;
     this.contextTrackIdx = null;
     this.currentDetailPlaylist = null;
+    this.searchAddDebounce = null;
   }
 
   loadLocalPlaylists() {
@@ -43,6 +44,7 @@ class PlaylistController {
     this.initCreateModal();
     this.initRenameModal();
     this.initDetailModal();
+    this.initAddSongsModal();
     this.initContextMenu();
     this.initCacheSettings();
     this.fetchPlaylists();
@@ -152,6 +154,7 @@ class PlaylistController {
     const btnClose = document.getElementById('btnClosePlaylistDetail');
     const btnPlayAll = document.getElementById('btnPlaylistPlayAll');
     const btnShuffle = document.getElementById('btnPlaylistShuffle');
+    const btnAddSongs = document.getElementById('btnPlaylistAddSongs');
     const btnRename = document.getElementById('btnRenamePlaylistTrigger');
     const btnDelete = document.getElementById('btnDeletePlaylistTrigger');
 
@@ -186,6 +189,14 @@ class PlaylistController {
       });
     }
 
+    if (btnAddSongs) {
+      btnAddSongs.addEventListener('click', () => {
+        if (this.currentDetailPlaylist) {
+          this.openAddSongsModal(this.currentDetailPlaylist);
+        }
+      });
+    }
+
     if (btnRename) {
       btnRename.addEventListener('click', () => {
         if (this.currentDetailPlaylist) {
@@ -214,8 +225,7 @@ class PlaylistController {
 
     if (!modal) return;
 
-    modal.style.display = 'flex';
-    requestAnimationFrame(() => modal.classList.add('is-open'));
+    modal.classList.add('is-open');
 
     // Find playlist in local cache first
     let pl = this.playlists.find(p => String(p.id) === String(playlistId));
@@ -268,10 +278,16 @@ class PlaylistController {
     if (tracks.length === 0) {
       tracksContainer.innerHTML = `
         <div style="text-align:center; padding:45px 15px; color:var(--text-muted); font-size:13.5px;">
-          This playlist is empty.<br>
-          <span style="font-size:12px; color:var(--text-dim); margin-top:6px; display:inline-block;">Long-press any song or use the menu to add it here.</span>
+          This playlist has no songs yet.<br>
+          <button id="btnEmptyAddSongsTrigger" class="btn-play-all-pill touch-spring" style="margin-top:14px; background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.3); color:#10b981;">
+            + Add Songs Now
+          </button>
         </div>
       `;
+      const emptyAddBtn = document.getElementById('btnEmptyAddSongsTrigger');
+      if (emptyAddBtn) {
+        emptyAddBtn.addEventListener('click', () => this.openAddSongsModal(this.currentDetailPlaylist));
+      }
       return;
     }
 
@@ -313,8 +329,132 @@ class PlaylistController {
     const modal = document.getElementById('playlistDetailModal');
     if (modal) {
       modal.classList.remove('is-open');
-      setTimeout(() => { modal.style.display = 'none'; }, 350);
     }
+  }
+
+  // --- Add Songs Modal & Search ---
+  initAddSongsModal() {
+    const modal = document.getElementById('addSongsToPlaylistModal');
+    const btnClose = document.getElementById('btnCloseAddSongsModal');
+    const input = document.getElementById('inputSearchAddSongs');
+
+    if (btnClose) {
+      btnClose.addEventListener('click', () => {
+        if (modal) modal.classList.remove('is-open');
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('is-open');
+      });
+    }
+
+    if (input) {
+      input.addEventListener('input', () => {
+        clearTimeout(this.searchAddDebounce);
+        this.searchAddDebounce = setTimeout(() => {
+          this.searchSongsToAdd(input.value.trim());
+        }, 250);
+      });
+    }
+  }
+
+  openAddSongsModal(playlist) {
+    haptics.trigger('medium');
+    const modal = document.getElementById('addSongsToPlaylistModal');
+    const titleEl = document.getElementById('addSongsModalTitle');
+    const input = document.getElementById('inputSearchAddSongs');
+
+    if (titleEl) titleEl.textContent = `Add Songs to "${playlist.name}"`;
+    if (input) input.value = '';
+
+    if (modal) modal.classList.add('is-open');
+    this.renderAddSongsList(DEFAULT_TRACKS);
+  }
+
+  async searchSongsToAdd(query) {
+    if (!query) {
+      this.renderAddSongsList(DEFAULT_TRACKS);
+      return;
+    }
+
+    try {
+      const res = await fetch(apiUrl(`/api/stream/search?q=${encodeURIComponent(query)}`));
+      if (res.ok) {
+        const json = await res.json();
+        const tracks = json.data || [];
+        this.renderAddSongsList(tracks);
+      }
+    } catch (e) {
+      const localMatches = DEFAULT_TRACKS.filter(t =>
+        t.title.toLowerCase().includes(query.toLowerCase()) ||
+        t.artist.toLowerCase().includes(query.toLowerCase())
+      );
+      this.renderAddSongsList(localMatches);
+    }
+  }
+
+  renderAddSongsList(tracks) {
+    const container = document.getElementById('addSongsResultsContainer');
+    if (!container) return;
+
+    if (!tracks || tracks.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:13px;">
+          No matching tracks found. Try searching another song.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = tracks.map((track) => `
+      <div class="track-row" style="padding:10px 12px; border-radius:12px; background:rgba(255,255,255,0.04); display:flex; align-items:center; gap:12px;">
+        <div class="track-avatar" style="width:38px; height:38px; border-radius:8px; overflow:hidden; flex-shrink:0;">
+          <img src="${track.cover_art || track.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'}" alt="${track.title}" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div class="track-meta" style="flex:1; overflow:hidden;">
+          <span style="font-size:13.5px; font-weight:600; color:#fff; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${track.title}</span>
+          <span style="font-size:11.5px; color:var(--text-muted); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${track.artist}</span>
+        </div>
+        <button class="btn-add-track-to-pl touch-spring" data-track-data='${encodeURIComponent(JSON.stringify(track))}' style="padding:6px 14px; border-radius:999px; background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.35); color:#10b981; font-size:12px; font-weight:700; cursor:pointer;">
+          + Add
+        </button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.btn-add-track-to-pl').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        haptics.trigger('heavy');
+        const raw = btn.getAttribute('data-track-data');
+        if (!raw || !this.currentDetailPlaylist) return;
+        const track = JSON.parse(decodeURIComponent(raw));
+
+        btn.disabled = true;
+        btn.textContent = 'Adding...';
+
+        await this.addTrackDirectly(this.currentDetailPlaylist.id, track);
+
+        btn.textContent = 'Added';
+        btn.style.background = 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = 'rgba(255,255,255,0.15)';
+        btn.style.color = '#fff';
+      });
+    });
+  }
+
+  async addTrackDirectly(playlistId, track) {
+    try {
+      await fetch(apiUrl(`/api/playlists/${playlistId}/tracks`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ track })
+      });
+    } catch (e) {}
+
+    await this.openPlaylistDetail(playlistId);
+    await this.fetchPlaylists();
+    errorHandler.showToast(`Added "${track.title}" to playlist`);
   }
 
   async removeTrackFromPlaylist(playlistId, trackId) {
@@ -325,7 +465,6 @@ class PlaylistController {
       });
     } catch (e) {}
 
-    // Refresh view
     await this.openPlaylistDetail(playlistId);
     await this.fetchPlaylists();
     errorHandler.showToast('Removed track from playlist');
