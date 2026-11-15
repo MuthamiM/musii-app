@@ -1,16 +1,19 @@
 {
+  "explorer.decorations.colors": false,
+  "explorer.decorations.badges": false,
+  "workbench.editor.decorations.colors": false,
+  "workbench.editor.decorations.badges": false,
   "problems.decorations.enabled": false,
-  "java.diagnostic.filter": [
-    "**/android/**",
-    "**/MainActivity.java",
-    "**/MusiiMediaService.java"
-  ],
   "java.errors.incompleteClasspath.severity": "ignore",
   "java.jdt.ls.androidSupport.enabled": "on",
   "gradle.nestedProjects": true,
   "java.import.gradle.enabled": true,
   "java.import.gradle.wrapper.enabled": true,
   "java.configuration.updateBuildConfiguration": "automatic",
+  "java.project.referencedLibraries": [
+    "/home/cantroll/Android/Sdk/platforms/android-35/android.jar",
+    "/home/cantroll/MUSII/node_modules/@capacitor/android/capacitor/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar"
+  ],
   "files.exclude": {
     "**/android/.gradle": true,
     "**/android/build": true,

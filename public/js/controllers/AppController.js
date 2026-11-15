@@ -359,174 +359,142 @@ class AppController {
   }
 
   bindLyricsEvents() {
-    const container = document.getElementById('sheetLyricsContainer');
-    const statusBadge = document.getElementById('lyricsStatusBadge');
-    const overlaySheet = document.getElementById('lyricsOverlaySheet');
-    const overlayList = document.getElementById('lyricsOverlayList');
-    const overlayBackdrop = document.getElementById('lyricsOverlayBackdrop');
-    const overlayTitle = document.getElementById('lyricsOverlayTitle');
-    const overlayArtist = document.getElementById('lyricsOverlayArtist');
-    const overlayPill = document.getElementById('lyricsOverlayPill');
-    const btnCloseOverlay = document.getElementById('btnCloseLyricsOverlay');
-    const btnOpenOverlay = document.getElementById('btnOpenLyricsOverlay');
-    const cardLyricsPreview = document.getElementById('cardLyricsPreview');
-    const btnSheetLyrics = document.getElementById('btnSheetLyrics');
-    const btnMiniLyrics = document.getElementById('btnMiniLyrics');
+    const np = document.getElementById('fullscreenPlayerSheet');
+    const lyEl = document.getElementById('ly');
+    const lpEl = document.getElementById('lp');
+    const capX = document.getElementById('cap-x');
+    const lbtn = document.getElementById('btnToggleLyricsMode');
+    const btnLvHeart = document.getElementById('btnLvHeart');
+    const btnLvQueue = document.getElementById('btnLvQueue');
 
-    const openOverlay = () => {
-      haptics.trigger('medium');
-      if (overlaySheet) {
-        const curTrack = audioController.getCurrentTrack();
-        if (curTrack) {
-          const cover = curTrack.cover_art || curTrack.thumbnail || '';
-          if (overlayBackdrop && cover) {
-            overlayBackdrop.style.backgroundImage = `url('${cover}')`;
-          }
-          if (overlayTitle) overlayTitle.textContent = curTrack.title;
-          if (overlayArtist) overlayArtist.textContent = curTrack.artist;
-          const overlayCover = document.getElementById('lyricsOverlayCover');
-          if (overlayCover && cover) overlayCover.src = cover;
-        }
-        overlaySheet.classList.add('is-open');
-      }
-    };
+    let lyricsEngine = null;
+    let overlayView = null;
+    let previewCard = null;
+    let lyricsAbortCtl = null;
 
-    const closeOverlay = () => {
-      haptics.trigger('light');
-      if (overlaySheet) overlaySheet.classList.remove('is-open');
-    };
-
-    if (btnOpenOverlay) btnOpenOverlay.addEventListener('click', (e) => { e.stopPropagation(); openOverlay(); });
-    if (btnSheetLyrics) btnSheetLyrics.addEventListener('click', (e) => { e.stopPropagation(); openOverlay(); });
-    if (btnMiniLyrics) btnMiniLyrics.addEventListener('click', (e) => { e.stopPropagation(); openOverlay(); });
-    if (cardLyricsPreview) cardLyricsPreview.addEventListener('click', () => openOverlay());
-    if (btnCloseOverlay) btnCloseOverlay.addEventListener('click', () => closeOverlay());
-
-    // Lyrics overlay footer playback controls
-    const btnLyricsPlayPause = document.getElementById('btnLyricsFooterPlayPause');
-    const btnLyricsPrev = document.getElementById('btnLyricsFooterPrev');
-    const btnLyricsNext = document.getElementById('btnLyricsFooterNext');
-    const lyricsProgressTrack = document.getElementById('lyricsFooterProgressTrack');
-
-    if (btnLyricsPlayPause) {
-      btnLyricsPlayPause.addEventListener('click', () => audioController.togglePlay());
-    }
-    if (btnLyricsPrev) {
-      btnLyricsPrev.addEventListener('click', () => audioController.prev());
-    }
-    if (btnLyricsNext) {
-      btnLyricsNext.addEventListener('click', () => audioController.next());
-    }
-    if (lyricsProgressTrack) {
-      lyricsProgressTrack.addEventListener('click', (e) => {
-        const rect = lyricsProgressTrack.getBoundingClientRect();
-        const ratio = (e.clientX - rect.left) / rect.width;
-        audioController.seek(ratio);
+    if (window.Musii && window.Musii.lyrics && lyEl && lpEl) {
+      lyricsEngine = window.Musii.lyrics.create();
+      overlayView = window.Musii.lyrics.overlay(lyEl, {
+        getTime: () => audioController.currentTime,
+        isPlaying: () => audioController.isPlaying,
+        seek: (s) => audioController.seekTo(s)
+      });
+      previewCard = window.Musii.lyrics.preview(lpEl, {
+        onOpen: () => setLyricsMode('lyrics')
       });
     }
 
+    function setLyricsMode(mode) {
+      if (!np) return;
+      np.dataset.mode = mode;
+      if (lbtn) {
+        lbtn.setAttribute('aria-pressed', String(mode === 'lyrics'));
+      }
+      if (overlayView) {
+        overlayView.poke();
+      }
+    }
+
+    if (lbtn) {
+      lbtn.addEventListener('click', () => {
+        haptics.trigger('medium');
+        setLyricsMode(np && np.dataset.mode === 'lyrics' ? 'art' : 'lyrics');
+      });
+    }
+
+    const btnMiniLyrics = document.getElementById('btnMiniLyrics');
+    if (btnMiniLyrics) {
+      btnMiniLyrics.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modalController.openPlayerSheet();
+        setLyricsMode('lyrics');
+      });
+    }
+
+    if (btnLvHeart) {
+      btnLvHeart.addEventListener('click', () => {
+        haptics.trigger('medium');
+        const cur = audioController.getCurrentTrack();
+        if (cur) playlistController.toggleFavorite(cur);
+      });
+    }
+
+    if (btnLvQueue) {
+      btnLvQueue.addEventListener('click', () => {
+        haptics.trigger('medium');
+        modalController.openQueueModal();
+      });
+    }
+
+    const loadTrackLyrics = (track, nextTrack) => {
+      if (!track) return;
+      const coverUrl = track.cover_art || track.thumbnail || track.cover || '';
+      if (np) {
+        const safe = (window.Musii && window.Musii.core) ? window.Musii.core.safeUrl(coverUrl) : coverUrl;
+        np.style.setProperty('--cover', `url("${safe}")`);
+      }
+
+      const lvThumb = document.getElementById('lvThumb');
+      if (lvThumb && coverUrl) lvThumb.style.backgroundImage = `url("${coverUrl}")`;
+      const lvTitle = document.getElementById('lvTitle');
+      if (lvTitle) lvTitle.textContent = track.title || 'MUSII';
+      const lvArtist = document.getElementById('lvArtist');
+      if (lvArtist) lvArtist.textContent = track.artist || 'Unknown Artist';
+
+      if (!lyricsEngine || !overlayView || !previewCard) return;
+
+      if (lyricsAbortCtl) lyricsAbortCtl.abort();
+      lyricsAbortCtl = new AbortController();
+
+      overlayView.render({ status: 'loading' });
+      previewCard.render({ status: 'loading' });
+
+      lyricsEngine.get({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        durationSec: Number(track.duration || audioController.duration || 210),
+        cover: coverUrl
+      }, { signal: lyricsAbortCtl.signal }).then((r) => {
+        overlayView.render(r);
+        previewCard.render(r);
+        if (capX) capX.textContent = r.cached ? ' \u00b7 saved on this device' : '';
+      }).catch(() => {});
+
+      if (nextTrack) {
+        lyricsEngine.prefetch({
+          title: nextTrack.title,
+          artist: nextTrack.artist,
+          album: nextTrack.album,
+          durationSec: Number(nextTrack.duration || 210),
+          cover: nextTrack.cover_art || nextTrack.thumbnail || nextTrack.cover
+        });
+      }
+    };
+
+    window.addEventListener('musii:progress', (e) => {
+      const curTime = e.detail && e.detail.currentTime ? e.detail.currentTime : audioController.currentTime;
+      const dur = e.detail && e.detail.duration ? e.detail.duration : audioController.duration;
+      if (previewCard) {
+        previewCard.update(curTime);
+      }
+      const rightLabel = document.getElementById('sheetTotalTime');
+      if (rightLabel && np && np.dataset.mode === 'lyrics') {
+        const remaining = Math.max(0, dur - curTime);
+        const fmtStr = (window.Musii && window.Musii.core)
+          ? window.Musii.core.fmt(remaining)
+          : audioController.formatTime(remaining);
+        rightLabel.textContent = `-${fmtStr}`;
+      }
+    });
+
     audioController.subscribe(({ isPlaying, track }) => {
-      const icon = document.getElementById('iconLyricsFooterPlayPause');
-      if (icon) {
-        icon.innerHTML = isPlaying
-          ? '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>'
-          : '<polygon points="8 5 19 12 8 19 8 5"></polygon>';
-      }
       if (track) {
-        if (overlayTitle) overlayTitle.textContent = track.title;
-        if (overlayArtist) overlayArtist.textContent = track.artist;
-        const overlayCover = document.getElementById('lyricsOverlayCover');
-        if (overlayCover && (track.cover_art || track.thumbnail)) {
-          overlayCover.src = track.cover_art || track.thumbnail;
-        }
-        if (overlayBackdrop && (track.cover_art || track.thumbnail)) {
-          overlayBackdrop.style.backgroundImage = `url('${track.cover_art || track.thumbnail}')`;
-        }
+        const nextTrack = audioController.queue[0] || audioController.tracks[audioController.currentIdx + 1];
+        loadTrackLyrics(track, nextTrack);
       }
-    });
-
-    window.addEventListener('musii:lyrics-loaded', (e) => {
-      const lines = e.detail && e.detail.lines ? e.detail.lines : [];
-      const hasLines = lines.length > 0;
-
-      if (statusBadge) statusBadge.textContent = lines.length > 1 ? 'SYNCED' : 'SNIPPET';
-      if (overlayPill) overlayPill.textContent = lines.length > 1 ? 'SYNCED' : 'SNIPPET';
-
-      // Render mini sheet preview
-      if (container) {
-        if (!hasLines) {
-          container.innerHTML = '<div class="synced-lyric-item is-active">Instrumental or lyrics unavailable</div>';
-        } else {
-          container.innerHTML = lines.map((line, idx) => `
-            <div class="synced-lyric-item ${idx === 0 ? 'is-active' : ''}" data-idx="${idx}" data-time="${line.time}" style="cursor:pointer; padding:3px 0;">
-              ${line.text}
-            </div>
-          `).join('');
-
-          container.querySelectorAll('.synced-lyric-item').forEach(el => {
-            el.addEventListener('click', () => {
-              const t = parseFloat(el.getAttribute('data-time'));
-              if (!isNaN(t)) audioController.seekTo(t);
-            });
-          });
-        }
-      }
-
-      // Render fullscreen Apple Music style overlay
-      if (overlayList) {
-        if (!hasLines) {
-          overlayList.innerHTML = '<div class="overlay-lyric-line is-active" style="text-align:center; padding-top:60px;">Instrumental or lyrics unavailable</div>';
-        } else {
-          overlayList.innerHTML = lines.map((line, idx) => `
-            <div class="overlay-lyric-line ${idx === 0 ? 'is-active' : ''}" data-idx="${idx}" data-time="${line.time}">
-              ${line.text}
-            </div>
-          `).join('');
-
-          overlayList.querySelectorAll('.overlay-lyric-line').forEach(el => {
-            el.addEventListener('click', () => {
-              haptics.trigger('medium');
-              const t = parseFloat(el.getAttribute('data-time'));
-              if (!isNaN(t)) audioController.seekTo(t);
-            });
-          });
-        }
-      }
-    });
-
-    window.addEventListener('musii:lyric-change', (e) => {
-      const { index } = e.detail;
-
-      // Update small card lyrics
-      if (container) {
-        const items = container.querySelectorAll('.synced-lyric-item');
-        items.forEach((item, idx) => {
-          const isActive = idx === index;
-          item.classList.toggle('is-active', isActive);
-          if (isActive) {
-            const containerHeight = container.clientHeight;
-            const itemTop = item.offsetTop - container.offsetTop;
-            const itemHeight = item.clientHeight;
-            container.scrollTo({
-              top: itemTop - (containerHeight / 2) + (itemHeight / 2),
-              behavior: 'smooth'
-            });
-          }
-        });
-      }
-
-      // Update fullscreen lyrics overlay
-      if (overlayList) {
-        const overlayLines = overlayList.querySelectorAll('.overlay-lyric-line');
-        overlayLines.forEach((line, idx) => {
-          const isActive = idx === index;
-          const isPassed = idx < index;
-          line.classList.toggle('is-active', isActive);
-          line.classList.toggle('is-passed', isPassed);
-          if (isActive) {
-            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        });
+      if (overlayView && isPlaying) {
+        overlayView.poke();
       }
     });
   }

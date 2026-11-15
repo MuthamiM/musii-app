@@ -1,0 +1,310 @@
+/* musii/css/lyrics.css - Now Playing lyrics mode (BitChord-style), lyric lines, live lyrics card.
+ * Colour tokens are sampled from the musii screenshot; map them onto your own design tokens if you have them. */
+:root {
+  --mu-bg: #09090b;
+  --mu-surface: #16151a;
+  --mu-btn: #1c1c1e;
+  --mu-track: #26252a;
+  --mu-tx: #f4f4f6;
+  --mu-mute: #9b9aa0;
+  --mu-dim: #5f5e64;
+  --mu-pink: #ff4d6d;
+  --mu-grad: linear-gradient(135deg, #ff4257, #fe692f);
+  --mu-glass: rgba(255, 255, 255, 0.18); /* translucent circle buttons in lyrics mode */
+}
+
+/* ---- Now Playing: two layers (.np-art, .np-lyr) over one shared control block (.np-ctl) -------------- */
+.np {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--mu-bg);
+  color: var(--mu-tx);
+}
+.np > * {
+  position: relative;
+}
+.np-bg,
+.np-shade {
+  position: absolute !important;
+  opacity: 0;
+  transition: opacity 0.45s;
+  pointer-events: none;
+}
+/* artwork-tinted background without reading pixels (works for cross-origin art): a tiny blurred copy scaled up */
+.np-bg {
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  transform: scale(16);
+  background: var(--cover) center / cover;
+  filter: blur(5px) saturate(1.7) brightness(0.85);
+}
+.np-shade {
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.55) 100%);
+}
+.np[data-mode='lyrics'] .np-bg,
+.np[data-mode='lyrics'] .np-shade {
+  opacity: 1;
+}
+.np[data-mode='art'] .np-lyr,
+.np[data-mode='lyrics'] .np-top,
+.np[data-mode='lyrics'] .np-art {
+  display: none;
+}
+.np-lyr {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: lv-in 0.3s ease-out;
+}
+@keyframes lv-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* compact header: grabber, 50px cover, title / artist, round glass buttons (heart, queue) */
+.lv-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(22px + env(safe-area-inset-top)) 22px 10px;
+}
+.lv-head::before {
+  content: '';
+  position: absolute;
+  top: calc(9px + env(safe-area-inset-top));
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.lv-thumb {
+  flex: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: var(--cover) center / cover;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.lv-meta {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.lv-meta b {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lv-meta small {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lv-act {
+  display: flex;
+  gap: 8px;
+}
+.lv-act button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--mu-glass);
+  color: #fff;
+}
+.lv-cap {
+  padding: 8px 22px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+}
+.lv-cap a {
+  color: inherit;
+}
+/* lyrics toggle (speech-bubble icon) in the control block: filled while lyrics mode is on */
+.np-lbtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--mu-mute);
+}
+.np-lbtn[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.72);
+  color: #09090b;
+}
+/* progress in lyrics mode: translucent track, white fill (the elapsed / -remaining labels sit under it) */
+.np[data-mode='lyrics'] .np-seek {
+  background: rgba(255, 255, 255, 0.28);
+}
+.np[data-mode='lyrics'] .np-times {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---- lyric lines (js: lyrics.overlay). data-d = distance from the active line ------------------------ */
+.ly {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.ly-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 0 22px;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-mask-image: linear-gradient(transparent 0, #000 11%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(transparent 0, #000 11%, #000 84%, transparent 100%);
+}
+.ly-scroll::-webkit-scrollbar {
+  display: none;
+}
+.ly-pad {
+  height: 20%;
+}
+.ly-pad:last-child {
+  height: 74%;
+}
+.ly-line {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  padding: 0.34em 0;
+  color: #fff;
+  cursor: pointer;
+  transform-origin: left center;
+  transition:
+    opacity 0.4s,
+    filter 0.4s;
+  will-change: opacity, filter;
+}
+.ly-line[data-d='0'] {
+  opacity: 1;
+  filter: none;
+}
+.ly-line[data-d='1'] {
+  opacity: 0.42;
+  filter: blur(1.2px);
+}
+.ly-line[data-d='2'] {
+  opacity: 0.36;
+  filter: blur(2px);
+}
+.ly-line[data-d='3'] {
+  opacity: 0.3;
+  filter: blur(2.8px);
+}
+.ly-line[data-d='4'] {
+  opacity: 0.25;
+  filter: blur(3.6px);
+}
+.ly-line[data-d='5'] {
+  opacity: 0.2;
+  filter: blur(4.4px);
+}
+.ly-line[data-d='6'] {
+  opacity: 0.16;
+  filter: blur(5px);
+}
+.ly-plain {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  line-height: 1.5;
+}
+.ly-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+.ly-msg:empty {
+  display: none;
+}
+.ly-bar {
+  position: absolute;
+  right: 16px;
+  bottom: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ly-b {
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: var(--mu-glass);
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ly-line,
+  .np-lyr {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ---- live lyrics card in the artwork view (js: lyrics.preview): replaces the static "snippet" card ---- */
+.lp {
+  border: 1px solid var(--mu-track);
+  border-radius: 22px;
+  background: var(--mu-surface);
+  padding: 16px 22px 18px;
+  text-align: center;
+  cursor: pointer;
+  min-height: 112px;
+}
+.lp-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11.5px;
+  letter-spacing: 0.09em;
+  color: #a9a9ab;
+  text-align: left;
+}
+.lp-tag {
+  color: var(--mu-pink);
+  font-weight: 700;
+}
+.lp-cur {
+  margin: 14px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+}
+.lp-next {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--mu-dim);
+  min-height: 1.4em;
+}

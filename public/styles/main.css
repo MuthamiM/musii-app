@@ -13,4 +13,6 @@
 @import './components/auth.css';
 @import './components/settings.css';
 @import './components/search.css';
+@import './lyrics.css';
+@import './playlists.css';
 

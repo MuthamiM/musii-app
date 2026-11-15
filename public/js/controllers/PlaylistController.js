@@ -41,6 +41,46 @@ class PlaylistController {
       newBtn.addEventListener('click', () => this.openCreateModal());
     }
 
+    const importBtn = document.getElementById('btnImportPlaylistFile');
+    const importFileInput = document.getElementById('inputImportPlaylistFile');
+    if (importBtn && importFileInput) {
+      importBtn.addEventListener('click', () => {
+        haptics.trigger('light');
+        importFileInput.click();
+      });
+
+      importFileInput.addEventListener('change', async () => {
+        const file = importFileInput.files && importFileInput.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          let newPl = null;
+          if (window.Musii && window.Musii.playlists) {
+            const tempStore = window.Musii.playlists.create({ userId: localStorage.getItem('musii_userId') || 'guest' });
+            newPl = tempStore.importText(file.name, text);
+          }
+          if (newPl) {
+            const created = {
+              id: newPl.id,
+              name: newPl.name,
+              song_count: newPl.tracks ? newPl.tracks.length : 0,
+              tracks: newPl.tracks || [],
+              gradient: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)',
+              category: 'Imported'
+            };
+            this.playlists.unshift(created);
+            this.saveLocalPlaylists();
+            this.render();
+            errorHandler.showToast(`Imported "${newPl.name}" (${created.song_count} songs)`);
+            this.openPlaylistDetail(newPl.id);
+          }
+        } catch (err) {
+          errorHandler.showToast(err.message || 'Import failed');
+        }
+        importFileInput.value = '';
+      });
+    }
+
     this.initCreateModal();
     this.initRenameModal();
     this.initDetailModal();

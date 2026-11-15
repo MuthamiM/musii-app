@@ -10,9 +10,27 @@
   z-index: 300;
   display: flex;
   flex-direction: column;
-  padding: max(env(safe-area-inset-top), 24px) 24px max(env(safe-area-inset-bottom), 32px);
+  padding: 0;
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fullscreen-player-sheet .sheet-top-bar {
+  padding: max(env(safe-area-inset-top), 20px) 20px 0 20px;
+}
+
+.fullscreen-player-sheet .np-art {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  overflow: hidden;
+}
+
+.fullscreen-player-sheet .np-ctl {
+  padding: 10px 20px max(env(safe-area-inset-bottom), 24px) 20px;
 }
 
 .fullscreen-player-sheet.is-open {
