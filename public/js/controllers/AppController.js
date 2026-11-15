@@ -384,6 +384,8 @@ class AppController {
           }
           if (overlayTitle) overlayTitle.textContent = curTrack.title;
           if (overlayArtist) overlayArtist.textContent = curTrack.artist;
+          const overlayCover = document.getElementById('lyricsOverlayCover');
+          if (overlayCover && cover) overlayCover.src = cover;
         }
         overlaySheet.classList.add('is-open');
       }
@@ -433,6 +435,10 @@ class AppController {
       if (track) {
         if (overlayTitle) overlayTitle.textContent = track.title;
         if (overlayArtist) overlayArtist.textContent = track.artist;
+        const overlayCover = document.getElementById('lyricsOverlayCover');
+        if (overlayCover && (track.cover_art || track.thumbnail)) {
+          overlayCover.src = track.cover_art || track.thumbnail;
+        }
         if (overlayBackdrop && (track.cover_art || track.thumbnail)) {
           overlayBackdrop.style.backgroundImage = `url('${track.cover_art || track.thumbnail}')`;
         }
