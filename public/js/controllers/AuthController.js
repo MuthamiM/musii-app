@@ -62,6 +62,21 @@ class AuthController {
     const btnChangeEmail = document.getElementById('btnAuthChangeEmail');
     const btnSetUsername = document.getElementById('btnAuthSetUsername');
     const btnSignOut = document.getElementById('btnProfileSignOut');
+    const btnForgot = document.getElementById('btnAuthForgot');
+    const inputPassword = document.getElementById('authInputPassword');
+
+    if (btnForgot) {
+      btnForgot.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleForgotPassword();
+      });
+    }
+
+    if (inputPassword) {
+      inputPassword.addEventListener('keydown', e => {
+        if (e.key === 'Enter') this.handleSendCode();
+      });
+    }
 
     if (btnSetUsername) {
       btnSetUsername.addEventListener('click', () => this.handleSetUsername());
@@ -169,6 +184,20 @@ class AuthController {
       this.inputUsername.value = user?.name || '';
       setTimeout(() => this.inputUsername.focus(), 150);
     }
+  }
+
+  handleForgotPassword() {
+    haptics.trigger('light');
+    const email = this.inputEmail ? this.inputEmail.value.trim() : '';
+    if (!email || !email.includes('@')) {
+      errorHandler.showToast('Enter your email to receive a password recovery code');
+      if (this.inputEmail) {
+        this.inputEmail.focus();
+      }
+      return;
+    }
+    errorHandler.showToast('Sending recovery code to ' + email);
+    this.handleSendCode();
   }
 
   async handleSetUsername() {

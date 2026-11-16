@@ -11,14 +11,6 @@ class ModalController {
   init() {
     this.updateModal = document.getElementById('softwareUpdateModal');
     this.playerSheet = document.getElementById('fullscreenPlayerSheet');
-    this.systemToast = document.getElementById('systemToastPill');
-
-    if (this.systemToast) {
-      this.systemToast.addEventListener('click', () => {
-        haptics.trigger('light');
-        this.systemToast.classList.add('dismissed');
-      });
-    }
 
     const btnCloseSheet = document.getElementById('btnClosePlayerSheet');
     if (btnCloseSheet) {
@@ -28,7 +20,7 @@ class ModalController {
     const miniPlayer = document.getElementById('floatingMiniPlayer');
     if (miniPlayer) {
       miniPlayer.addEventListener('click', e => {
-        if (e.target.closest('#btnMiniPlayPause')) return;
+        if (e.target.closest('#btnMiniPlayPause') || e.target.closest('#btnMiniLyrics')) return;
         this.openPlayerSheet();
       });
     }
@@ -43,14 +35,24 @@ class ModalController {
     if (this.updateModal) this.updateModal.classList.remove('is-open');
   }
 
-  openPlayerSheet() {
+  openPlayerSheet(mode = 'art') {
     haptics.trigger('medium');
-    if (this.playerSheet) this.playerSheet.classList.add('is-open');
+    if (this.playerSheet) {
+      this.playerSheet.classList.add('is-open');
+      this.playerSheet.dataset.mode = mode;
+      const lbtn = document.getElementById('btnToggleLyricsMode');
+      if (lbtn) lbtn.setAttribute('aria-pressed', String(mode === 'lyrics'));
+    }
   }
 
   closePlayerSheet() {
     haptics.trigger('light');
-    if (this.playerSheet) this.playerSheet.classList.remove('is-open');
+    if (this.playerSheet) {
+      this.playerSheet.classList.remove('is-open');
+      this.playerSheet.dataset.mode = 'art';
+      const lbtn = document.getElementById('btnToggleLyricsMode');
+      if (lbtn) lbtn.setAttribute('aria-pressed', 'false');
+    }
   }
 }
 

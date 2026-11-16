@@ -143,18 +143,23 @@
 .lv-cap a {
   color: inherit;
 }
-/* lyrics toggle (speech-bubble icon) in the control block: filled while lyrics mode is on */
+/* lyrics toggle button in the control block: circular glowing button */
 .np-lbtn {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
   color: var(--mu-mute);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
 }
 .np-lbtn[aria-pressed='true'] {
-  background: rgba(255, 255, 255, 0.72);
-  color: #09090b;
+  background: var(--mu-grad, linear-gradient(135deg, #ff4257, #fe692f));
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(255, 66, 87, 0.45);
 }
 /* progress in lyrics mode: translucent track, white fill (the elapsed / -remaining labels sit under it) */
 .np[data-mode='lyrics'] .np-seek {
@@ -178,8 +183,8 @@
   padding: 0 22px;
   scrollbar-width: none;
   overscroll-behavior: contain;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000000 6%, #000000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000000 6%, #000000 90%, transparent 100%);
 }
 .ly-scroll::-webkit-scrollbar {
   display: none;

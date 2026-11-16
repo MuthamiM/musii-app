@@ -360,6 +360,10 @@
       setOffset,
       poke() {
         cur = -2;
+        if (lines.length) {
+          paint(activeIndex(lines, time() + 0.12), true);
+          scroll.scrollTop = y;
+        }
         start();
       }, // re-measure + re-anchor (after show / seek / play)
       destroy() {

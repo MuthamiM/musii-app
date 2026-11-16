@@ -361,6 +361,14 @@ class AudioController {
     }
 
     this.notifyProgress();
+    if (typeof window !== 'undefined' && window.setMusiiLyricsMode) {
+      window.setMusiiLyricsMode('art');
+    }
+    const miniEl = document.getElementById('floatingMiniPlayer');
+    if (miniEl) miniEl.classList.remove('mini-hidden');
+    const navEl = document.getElementById('navIslandWrapper');
+    if (navEl) navEl.classList.remove('nav-hidden');
+
     if (autoPlay) {
       this.play();
     } else {

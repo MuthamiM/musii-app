@@ -394,23 +394,33 @@ class AppController {
         requestAnimationFrame(() => {
           overlayView.poke();
           setTimeout(() => overlayView.poke(), 60);
+          setTimeout(() => overlayView.poke(), 200);
         });
       }
+    }
+
+    window.setMusiiLyricsMode = setLyricsMode;
+
+    const btnLvBack = document.getElementById('btnLvBack');
+    if (btnLvBack) {
+      btnLvBack.addEventListener('click', () => {
+        haptics.trigger('light');
+        setLyricsMode('art');
+      });
+    }
+
+    const lvThumb = document.getElementById('lvThumb');
+    if (lvThumb) {
+      lvThumb.addEventListener('click', () => {
+        haptics.trigger('light');
+        setLyricsMode('art');
+      });
     }
 
     if (lbtn) {
       lbtn.addEventListener('click', () => {
         haptics.trigger('medium');
         setLyricsMode(np && np.dataset.mode === 'lyrics' ? 'art' : 'lyrics');
-      });
-    }
-
-    const btnMiniLyrics = document.getElementById('btnMiniLyrics');
-    if (btnMiniLyrics) {
-      btnMiniLyrics.addEventListener('click', (e) => {
-        e.stopPropagation();
-        modalController.openPlayerSheet();
-        setLyricsMode('lyrics');
       });
     }
 

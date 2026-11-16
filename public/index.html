@@ -233,7 +233,7 @@
         </button>
         <button class="touch-spring" id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Software Update</span>
-          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.13 Latest</span>
+          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.14 Latest</span>
         </button>
         <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Streaming Edge Mesh</span>
@@ -619,11 +619,6 @@
     </section>
   </main>
 
-  <!-- System Notification Toast (Pixel-Perfect from Screenshot) -->
-  <div class="system-toast-pill" id="systemToastPill">
-    Connected for charging only. Tap the USB notification to use USB for transferring files.
-  </div>
-
   <!-- Floating Mini Player -->
   <div class="floating-mini-player" id="floatingMiniPlayer">
     <div class="mini-thumb" id="miniDiscThumb">
@@ -634,9 +629,6 @@
       <span class="mini-artist-info" id="miniTrackArtist">YoungBoy Never Broke Again • AI YoungBoy 2</span>
     </div>
     <div class="mini-actions" style="display:flex; align-items:center; gap:8px;">
-      <button class="sheet-icon-btn touch-spring" id="btnMiniLyrics" title="Synced Lyrics" aria-label="Lyrics" style="width:34px; height:34px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--accent-gold);">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="9" x2="16" y2="9"></line></svg>
-      </button>
       <button class="mini-play-btn" id="btnMiniPlayPause" aria-label="Play or Pause">
         <svg viewBox="0 0 24 24" id="iconMiniPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
       </button>
@@ -724,7 +716,7 @@
     <div class="update-dialog">
       <div class="update-dialog-header">
         <h3>Software Update</h3>
-        <p id="updateModalSubtitle">MUSII v1.9.13 is available to download.</p>
+        <p id="updateModalSubtitle">MUSII v1.9.14 is available to download.</p>
       </div>
 
       <div class="update-whats-new">
@@ -754,7 +746,7 @@
         </div>
 
         <div class="update-meta-block">
-          <h4 id="updateVersionBadge">v1.9.13 Release</h4>
+          <h4 id="updateVersionBadge">v1.9.14 Release</h4>
           <p id="updateNotesText">Instant search, persistent account recovery via email, and in-app update engine.</p>
           <span class="update-changelog-link" id="btnViewChangelog">View on GitHub</span>
         </div>
@@ -804,6 +796,9 @@
 
     <div class="np-lyr">
       <div class="lv-head">
+        <button class="sheet-icon-btn touch-spring" id="btnLvBack" aria-label="Back to Album Art" title="Back to Album Art" style="width:38px; height:38px; flex:none; margin-right:4px;">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
         <span class="lv-thumb" id="lvThumb"></span>
         <span class="lv-meta"><b id="lvTitle">Make No Sense</b><small id="lvArtist">YoungBoy Never Broke Again</small></span>
         <span class="lv-act">
@@ -847,11 +842,11 @@
         <button class="transport-btn-skip touch-spring" id="btnSheetNext" aria-label="Next">
           <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
-        <button class="np-lbtn touch-spring" id="btnToggleLyricsMode" title="Toggle Lyrics" aria-label="Toggle Lyrics" aria-pressed="false">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            <line x1="8" y1="9" x2="16" y2="9"></line>
-            <line x1="8" y1="13" x2="13" y2="13"></line>
+        <button class="np-lbtn touch-spring" id="btnToggleLyricsMode" title="Lyrics" aria-label="Toggle Lyrics" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
           </svg>
         </button>
       </div>

@@ -1,4 +1,4 @@
-/* Glassmorphic Login Card - Purple Gradient Theme */
+/* Glassmorphic Login Card - Purple Gradient Theme (Optimized for Android WebView) */
 .auth-screen-overlay {
   position: fixed;
   inset: 0;
@@ -6,14 +6,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0a0a14;
+  background: #090611;
   background-image:
-    radial-gradient(ellipse at 30% 40%, rgba(120, 60, 200, 0.25) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 60%, rgba(160, 50, 180, 0.15) 0%, transparent 55%);
+    radial-gradient(ellipse at 30% 30%, rgba(130, 60, 220, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 70%, rgba(180, 50, 200, 0.2) 0%, transparent 60%);
   padding: 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 .auth-screen-overlay.auth-hidden {
@@ -28,44 +31,21 @@
   max-width: 360px;
   background: linear-gradient(
     160deg,
-    rgba(100, 50, 180, 0.35) 0%,
-    rgba(60, 20, 120, 0.25) 40%,
-    rgba(20, 10, 40, 0.65) 100%
+    #2c1550 0%,
+    #1d0d38 45%,
+    #120824 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 28px;
-  padding: 40px 28px 36px;
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 40px rgba(120, 60, 200, 0.06);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  backdrop-filter: blur(40px) saturate(180%);
+  padding: 38px 26px 32px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   text-align: center;
   box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Internal glow at top of card */
-.auth-glass-card::before {
-  content: '';
-  position: absolute;
-  top: -60%;
-  left: 10%;
-  right: 10%;
-  height: 100%;
-  background: radial-gradient(ellipse, rgba(140, 80, 220, 0.3) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.auth-glass-card > * {
-  position: relative;
-  z-index: 1;
+  margin: auto;
 }
 
 .auth-title {
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 300;
   letter-spacing: 0.02em;
   color: #ffffff;
@@ -81,8 +61,8 @@
 
 .auth-subtitle {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0 0 28px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 26px;
   line-height: 1.4;
 }
 
@@ -99,12 +79,12 @@
 
 .auth-input-icon {
   position: absolute;
-  left: 16px;
+  left: 15px;
   top: 50%;
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.45);
   pointer-events: none;
 }
 
@@ -113,13 +93,13 @@
   padding: 15px 16px 15px 44px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
   font-size: 14px;
   font-weight: 400;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .auth-text-input::placeholder {
@@ -127,9 +107,8 @@
 }
 
 .auth-text-input:focus {
-  border-color: rgba(160, 100, 240, 0.6);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px rgba(140, 80, 220, 0.15);
+  border-color: #a855f7;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .auth-code-input {
@@ -137,63 +116,61 @@
   padding: 15px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(180, 140, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #c084fc;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: 10px;
   text-align: center;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .auth-code-input:focus {
-  border-color: rgba(160, 100, 240, 0.6);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px rgba(140, 80, 220, 0.15);
+  border-color: #a855f7;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* Forgot Password link */
 .auth-forgot-link {
   display: block;
   text-align: right;
-  font-size: 12px;
-  color: rgba(180, 140, 255, 0.7);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #c084fc;
   margin: -4px 0 20px;
   cursor: pointer;
   background: none;
   border: none;
-  padding: 0;
+  padding: 4px 0;
   text-decoration: none;
 }
 
-.auth-forgot-link:hover {
-  color: rgba(200, 170, 255, 1);
+.auth-forgot-link:hover,
+.auth-forgot-link:active {
+  color: #e9d5ff;
+  text-decoration: underline;
 }
 
-/* Primary action button - gradient */
+/* Primary action button - purple gradient */
 .auth-primary-btn {
   width: 100%;
   padding: 15px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #6a3de8 0%, #9b4dca 50%, #5b21b6 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #6b21a8 100%);
   color: #ffffff;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.04em;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(100, 50, 200, 0.35);
-  transition: transform 0.15s, opacity 0.2s, box-shadow 0.25s;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+  transition: transform 0.15s, opacity 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-
-.auth-primary-btn:hover {
-  box-shadow: 0 10px 30px rgba(100, 50, 200, 0.5);
 }
 
 .auth-primary-btn:active {
@@ -210,7 +187,7 @@
   padding: 8px 12px;
   border-radius: 10px;
   background: transparent;
-  color: rgba(180, 140, 255, 0.6);
+  color: #c084fc;
   font-size: 12px;
   font-weight: 500;
   border: none;
@@ -238,9 +215,9 @@
   gap: 6px;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(140, 80, 220, 0.15);
-  border: 1px solid rgba(140, 80, 220, 0.25);
+  background: rgba(140, 80, 220, 0.18);
+  border: 1px solid rgba(140, 80, 220, 0.3);
   font-size: 12px;
-  color: rgba(200, 170, 255, 0.9);
+  color: #e9d5ff;
   margin-bottom: 16px;
 }
