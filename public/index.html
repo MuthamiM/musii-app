@@ -33,39 +33,41 @@
 </head>
 <body>
 
-  <!-- FULLSCREEN EMAIL AUTH GATEWAY (One Card) -->
+  <!-- FULLSCREEN EMAIL AUTH GATEWAY (Glassmorphic Card) -->
   <div class="auth-screen-overlay" id="authOverlay">
     <div class="auth-glass-card">
-      <h2 class="auth-title">MUSII</h2>
-      <p class="auth-subtitle">Enter your email to continue</p>
+      <h2 class="auth-title">Welcome Back, <span class="auth-title-name" id="authGreetingName">listener</span></h2>
+      <p class="auth-subtitle">Sign in to your MUSII account</p>
 
       <!-- Step 1: Enter Email (Sign In or Recover Account) -->
       <div class="auth-step active" id="authStepEmail">
         <div class="auth-input-group">
-          <label for="authInputEmail">Email</label>
-          <input type="email" id="authInputEmail" class="auth-text-input" placeholder="name@example.com" autocomplete="email" required>
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <input type="email" id="authInputEmail" class="auth-text-input" placeholder="Enter your email" autocomplete="email" required>
         </div>
+        <div class="auth-input-group">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <input type="password" id="authInputPassword" class="auth-text-input" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        <button class="auth-forgot-link" id="btnAuthForgot">Forgot Password?</button>
         <button class="auth-primary-btn touch-spring" id="btnAuthSendCode">
-          <span>Continue</span>
-          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          <span>Login</span>
         </button>
       </div>
 
       <!-- Step 2: Enter Verification Code -->
       <div class="auth-step" id="authStepCode">
         <h3 id="authCodeStepTitle" style="font-size:16px; font-weight:700; color:#fff; margin:0 0 4px;">Verify Code</h3>
-        <p id="authCodeStepSubtitle" style="font-size:12px; color:var(--text-muted); margin:0 0 12px;">Enter the 6-digit code sent to your email.</p>
+        <p id="authCodeStepSubtitle" style="font-size:12px; color:rgba(255,255,255,0.5); margin:0 0 12px;">Enter the 6-digit code sent to your email.</p>
         <div class="auth-user-badge">
-          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
           <span id="authTargetEmail">user@example.com</span>
         </div>
         <div class="auth-input-group">
-          <label for="authInputCode">6-Digit Code</label>
           <input type="text" id="authInputCode" class="auth-code-input" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
         </div>
         <button class="auth-primary-btn touch-spring" id="btnAuthVerify">
           <span>Verify & Continue</span>
-          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
         <div style="display:flex; justify-content:space-between; margin-top:12px;">
           <button class="auth-secondary-btn" id="btnAuthResend" style="width:auto; margin:0; padding:6px 10px;">Resend Code</button>
@@ -76,14 +78,13 @@
       <!-- Step 3: Choose Username -->
       <div class="auth-step" id="authStepUsername">
         <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #fff;">Choose Username</h3>
-        <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 14px;">Pick your personal handle to start listening.</p>
+        <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin: 0 0 14px;">Pick your personal handle to start listening.</p>
         <div class="auth-input-group">
-          <label for="authInputUsername">Handle</label>
-          <input type="text" id="authInputUsername" class="auth-text-input" placeholder="muthami" maxlength="24" autocomplete="username" required>
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <input type="text" id="authInputUsername" class="auth-text-input" placeholder="Choose a username" maxlength="24" autocomplete="username" required>
         </div>
         <button class="auth-primary-btn touch-spring" id="btnAuthSetUsername">
           <span>Start Listening</span>
-          <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
       </div>
     </div>
@@ -232,7 +233,7 @@
         </button>
         <button class="touch-spring" id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Software Update</span>
-          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.12 Latest</span>
+          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.13 Latest</span>
         </button>
         <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Streaming Edge Mesh</span>
@@ -723,7 +724,7 @@
     <div class="update-dialog">
       <div class="update-dialog-header">
         <h3>Software Update</h3>
-        <p id="updateModalSubtitle">MUSII v1.9.12 is available to download.</p>
+        <p id="updateModalSubtitle">MUSII v1.9.13 is available to download.</p>
       </div>
 
       <div class="update-whats-new">
@@ -753,7 +754,7 @@
         </div>
 
         <div class="update-meta-block">
-          <h4 id="updateVersionBadge">v1.9.12 Release</h4>
+          <h4 id="updateVersionBadge">v1.9.13 Release</h4>
           <p id="updateNotesText">Instant search, persistent account recovery via email, and in-app update engine.</p>
           <span class="update-changelog-link" id="btnViewChangelog">View on GitHub</span>
         </div>

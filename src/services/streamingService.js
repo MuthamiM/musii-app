@@ -310,6 +310,6 @@ setTimeout(() => {
   for (const t of defaultTracks) {
     service.queuePrewarm(t);
   }
-}, 1000);
+}, 15000);
 
 module.exports = service;

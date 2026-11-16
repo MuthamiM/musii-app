@@ -22,6 +22,18 @@ class AuthController {
     this.inputEmail = document.getElementById('authInputEmail');
     this.inputCode = document.getElementById('authInputCode');
     this.inputUsername = document.getElementById('authInputUsername');
+    this.greetingName = document.getElementById('authGreetingName');
+
+    // Restore greeting name from cached user
+    const cachedUser = localStorage.getItem('musii_user');
+    if (cachedUser) {
+      try {
+        const u = JSON.parse(cachedUser);
+        if (this.greetingName && u.name) {
+          this.greetingName.textContent = u.name;
+        }
+      } catch (e) {}
+    }
 
     this.bindEvents();
 
@@ -29,10 +41,9 @@ class AuthController {
     if (this.token) {
       document.documentElement.classList.add('user-authenticated');
       this.hideAuth();
-      const cached = localStorage.getItem('musii_user');
-      if (cached) {
+      if (cachedUser) {
         try {
-          const user = JSON.parse(cached);
+          const user = JSON.parse(cachedUser);
           this.updateProfileUI(user);
           window.dispatchEvent(new CustomEvent('musii:user-updated', { detail: { user } }));
         } catch (e) {}
@@ -355,12 +366,16 @@ class AuthController {
     const handleEl = document.getElementById('profileUserHandle');
     const initialEl = document.getElementById('profileUserInitial');
     const emailEl = document.getElementById('profileUserEmail');
+    const greetEl = document.getElementById('authGreetingName');
 
     if (nameEl) nameEl.textContent = user.name || 'MUSII Member';
     if (handleEl) handleEl.textContent = `${user.handle || '@user'} • Audiophile Lossless`;
     if (initialEl) initialEl.textContent = user.avatar_initial || 'M';
     if (emailEl && user.email) {
       emailEl.textContent = user.email;
+    }
+    if (greetEl && user.name) {
+      greetEl.textContent = user.name;
     }
   }
 
