@@ -22,6 +22,58 @@ class NavigationController {
     });
 
     this.bindScrollAutoHide();
+    this.bindKeyboardAvoidance();
+  }
+
+  bindKeyboardAvoidance() {
+    const navIsland = document.getElementById('navIslandWrapper');
+    const miniPlayer = document.getElementById('floatingMiniPlayer');
+
+    const hideBars = () => {
+      document.documentElement.classList.add('keyboard-visible');
+      if (navIsland) navIsland.classList.add('nav-hidden');
+      if (miniPlayer) miniPlayer.classList.add('mini-hidden');
+    };
+
+    const restoreBars = () => {
+      document.documentElement.classList.remove('keyboard-visible');
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      if (currentScrollY <= 40) {
+        if (navIsland) navIsland.classList.remove('nav-hidden');
+        if (miniPlayer) miniPlayer.classList.remove('mini-hidden');
+      }
+    };
+
+    document.addEventListener('focusin', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        hideBars();
+      }
+    });
+
+    document.addEventListener('focusout', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        setTimeout(() => {
+          const active = document.activeElement;
+          if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
+            restoreBars();
+          }
+        }, 120);
+      }
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const isKeyboard = window.visualViewport.height < window.innerHeight - 100;
+        if (isKeyboard) {
+          hideBars();
+        } else {
+          const active = document.activeElement;
+          if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
+            restoreBars();
+          }
+        }
+      });
+    }
   }
 
   bindScrollAutoHide() {

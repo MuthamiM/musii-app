@@ -17,6 +17,18 @@ class ModalController {
       btnCloseSheet.addEventListener('click', () => this.closePlayerSheet());
     }
 
+    const btnCloseQueue = document.getElementById('btnCloseQueueModal');
+    if (btnCloseQueue) {
+      btnCloseQueue.addEventListener('click', () => this.closeQueueModal());
+    }
+
+    const queueModal = document.getElementById('queueModal');
+    if (queueModal) {
+      queueModal.addEventListener('click', (e) => {
+        if (e.target === queueModal) this.closeQueueModal();
+      });
+    }
+
     const miniPlayer = document.getElementById('floatingMiniPlayer');
     if (miniPlayer) {
       miniPlayer.addEventListener('click', e => {
@@ -53,6 +65,23 @@ class ModalController {
       const lbtn = document.getElementById('btnToggleLyricsMode');
       if (lbtn) lbtn.setAttribute('aria-pressed', 'false');
     }
+  }
+
+  openQueueModal() {
+    haptics.trigger('medium');
+    const queueModal = document.getElementById('queueModal');
+    if (queueModal) {
+      queueModal.classList.add('is-open');
+      if (window.updateMusiiQueueUI) {
+        window.updateMusiiQueueUI();
+      }
+    }
+  }
+
+  closeQueueModal() {
+    haptics.trigger('light');
+    const queueModal = document.getElementById('queueModal');
+    if (queueModal) queueModal.classList.remove('is-open');
   }
 }
 

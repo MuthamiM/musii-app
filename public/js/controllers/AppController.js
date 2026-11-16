@@ -275,8 +275,8 @@ class AppController {
   }
 
   bindAudioEvents() {
-    const PLAY_SVG = '<polygon points="8 5 19 12 8 19 8 5"></polygon>';
-    const PAUSE_SVG = '<rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect>';
+    const PLAY_SVG = '<path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l11-6.86a1 1 0 0 0 0-1.68l-11-6.86A1 1 0 0 0 8 5.14z"></path>';
+    const PAUSE_SVG = '<rect x="6" y="4" width="4" height="16" rx="2"></rect><rect x="14" y="4" width="4" height="16" rx="2"></rect>';
 
     audioController.subscribe(({ track, isPlaying, isBuffering }) => {
       const miniName = document.getElementById('miniTrackName');
@@ -519,8 +519,21 @@ class AppController {
     const btnQueue = document.getElementById('btnSheetQueue');
     const btnCloseQueue = document.getElementById('btnCloseQueueModal');
     const btnClearQueue = document.getElementById('btnClearQueue');
+    const npTitle = document.getElementById('queueNowPlayingTitle');
+    const npArtist = document.getElementById('queueNowPlayingArtist');
+    const npCover = document.getElementById('queueNowPlayingCover');
+    const countLabel = document.getElementById('queueCountLabel');
 
-    const updateQueueUI = (queue) => {
+    const updateQueueUI = (queue = audioController.queue) => {
+      const curTrack = audioController.getCurrentTrack();
+      if (curTrack) {
+        if (npTitle) npTitle.textContent = curTrack.title || 'MUSII';
+        if (npArtist) npArtist.textContent = curTrack.artist || 'Unknown Artist';
+        if (npCover) {
+          npCover.src = curTrack.cover_art || curTrack.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg';
+        }
+      }
+
       if (badgeCount) {
         if (queue && queue.length > 0) {
           badgeCount.textContent = queue.length;
@@ -531,33 +544,132 @@ class AppController {
       }
 
       if (!queueList) return;
-      if (!queue || queue.length === 0) {
-        queueList.innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:13px;">Queue is empty. Use song menus to add tracks.</div>';
-        return;
+
+      const manualQueue = queue || [];
+      const allTracks = audioController.tracks || [];
+      const curIdx = audioController.currentIdx || 0;
+
+      // Build upcoming suggested list (at least 5 songs)
+      const suggestions = [];
+      const seenIds = new Set(manualQueue.map(t => t.id));
+      if (curTrack) seenIds.add(curTrack.id);
+
+      for (let i = 1; i < allTracks.length && suggestions.length < 6; i++) {
+        const nextIdx = (curIdx + i) % allTracks.length;
+        const candidate = allTracks[nextIdx];
+        if (candidate && !seenIds.has(candidate.id)) {
+          suggestions.push({ ...candidate, trackIndex: nextIdx });
+          seenIds.add(candidate.id);
+        }
       }
 
-      queueList.innerHTML = queue.map((track, i) => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.05); border-radius:12px;">
-          <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
-            <span style="font-size:12px; font-weight:700; color:var(--text-muted); width:18px;">${i + 1}</span>
-            <img src="${track.cover_art || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'}" style="width:36px; height:36px; border-radius:8px; object-fit:cover;">
-            <div style="overflow:hidden;">
-              <div style="font-size:13px; font-weight:600; color:#fff; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${track.title}</div>
-              <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${track.artist}</div>
+      // If still fewer than 5, pull from any tracks
+      for (let i = 0; i < allTracks.length && suggestions.length < 5; i++) {
+        const t = allTracks[i];
+        if (t && (!curTrack || t.id !== curTrack.id) && !seenIds.has(t.id)) {
+          suggestions.push({ ...t, trackIndex: i });
+          seenIds.add(t.id);
+        }
+      }
+
+      const totalCount = manualQueue.length + suggestions.length;
+      if (countLabel) {
+        countLabel.textContent = `${totalCount} upcoming`;
+      }
+
+      let html = '';
+
+      // 1. Manually Queued Items
+      if (manualQueue.length > 0) {
+        html += manualQueue.map((track, i) => `
+          <div class="queue-item-row touch-spring" data-play-queue="${i}" style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:10px; overflow:hidden; flex:1;">
+              <span style="font-size:12px; font-weight:800; color:var(--accent); width:18px; text-align:center;">${i + 1}</span>
+              <img src="${track.cover_art || track.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'}" style="width:38px; height:38px; border-radius:10px; object-fit:cover; flex-shrink:0;">
+              <div style="overflow:hidden; flex:1;">
+                <div style="font-size:13px; font-weight:700; color:#fff; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${track.title}</div>
+                <div style="font-size:11.5px; color:var(--text-muted); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${track.artist}</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(255,66,87,0.2); color:var(--accent); font-weight:700;">QUEUED</span>
+              <button class="btn-remove-queue-item" data-idx="${i}" style="background:none; border:none; color:rgba(255,255,255,0.5); font-size:18px; padding:4px 8px; cursor:pointer;" aria-label="Remove">&times;</button>
             </div>
           </div>
-          <button class="btn-remove-queue-item" data-idx="${i}" style="background:none; border:none; color:rgba(255,255,255,0.5); font-size:18px; padding:4px 8px; cursor:pointer;" aria-label="Remove">&times;</button>
-        </div>
-      `).join('');
+        `).join('');
+      }
 
+      // 2. Suggested / Upcoming Tracks from Library (At least 5)
+      if (suggestions.length > 0) {
+        html += suggestions.map((track, i) => `
+          <div class="queue-item-row touch-spring" data-play-suggested="${track.trackIndex != null ? track.trackIndex : i}" style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:14px; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:10px; overflow:hidden; flex:1;">
+              <span style="font-size:12px; font-weight:600; color:var(--text-muted); width:18px; text-align:center;">${manualQueue.length + i + 1}</span>
+              <img src="${track.cover_art || track.thumbnail || 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'}" style="width:38px; height:38px; border-radius:10px; object-fit:cover; flex-shrink:0;">
+              <div style="overflow:hidden; flex:1;">
+                <div style="font-size:13px; font-weight:600; color:#fff; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${track.title}</div>
+                <div style="font-size:11.5px; color:var(--text-muted); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${track.artist}</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn-add-to-queue-item" data-sugg-idx="${i}" title="Add to Queue" style="background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.85); width:28px; height:28px; border-radius:50%; font-size:14px; display:grid; place-items:center; cursor:pointer;">+</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      queueList.innerHTML = html;
+
+      // Event Listeners for Queue rows
       queueList.querySelectorAll('.btn-remove-queue-item').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const idx = parseInt(btn.dataset.idx, 10);
           audioController.removeFromQueue(idx);
+          haptics.trigger('light');
+        });
+      });
+
+      queueList.querySelectorAll('.btn-add-to-queue-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.suggIdx, 10);
+          const t = suggestions[idx];
+          if (t) {
+            audioController.addToQueue(t);
+            haptics.trigger('medium');
+          }
+        });
+      });
+
+      queueList.querySelectorAll('[data-play-suggested]').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-add-to-queue-item')) return;
+          const trackIdx = parseInt(row.dataset.playSuggested, 10);
+          if (!isNaN(trackIdx)) {
+            haptics.trigger('medium');
+            audioController.selectTrack(trackIdx, true);
+            if (queueModal) queueModal.classList.remove('is-open');
+          }
+        });
+      });
+
+      queueList.querySelectorAll('[data-play-queue]').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-remove-queue-item')) return;
+          const qIdx = parseInt(row.dataset.playQueue, 10);
+          const track = manualQueue[qIdx];
+          if (track) {
+            haptics.trigger('medium');
+            audioController.playSong(track);
+            audioController.removeFromQueue(qIdx);
+            if (queueModal) queueModal.classList.remove('is-open');
+          }
         });
       });
     };
+
+    window.updateMusiiQueueUI = updateQueueUI;
 
     window.addEventListener('musii:queue-updated', (e) => {
       updateQueueUI(e.detail.queue);
@@ -585,6 +697,7 @@ class AppController {
 
     if (btnClearQueue) {
       btnClearQueue.addEventListener('click', () => {
+        haptics.trigger('light');
         audioController.clearQueue();
       });
     }

@@ -24,7 +24,10 @@
   will-change: transform, opacity;
 }
 
-.floating-mini-player.mini-hidden {
+.floating-mini-player.mini-hidden,
+html.keyboard-visible .floating-mini-player,
+body:has(input:focus) .floating-mini-player,
+body:has(textarea:focus) .floating-mini-player {
   transform: translate(-50%, calc(100% + 120px)) !important;
   opacity: 0 !important;
   pointer-events: none !important;

@@ -233,7 +233,7 @@
         </button>
         <button class="touch-spring" id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Software Update</span>
-          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.14 Latest</span>
+          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.15 Latest</span>
         </button>
         <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Streaming Edge Mesh</span>
@@ -716,7 +716,7 @@
     <div class="update-dialog">
       <div class="update-dialog-header">
         <h3>Software Update</h3>
-        <p id="updateModalSubtitle">MUSII v1.9.14 is available to download.</p>
+        <p id="updateModalSubtitle">MUSII v1.9.15 is available to download.</p>
       </div>
 
       <div class="update-whats-new">
@@ -746,7 +746,7 @@
         </div>
 
         <div class="update-meta-block">
-          <h4 id="updateVersionBadge">v1.9.14 Release</h4>
+          <h4 id="updateVersionBadge">v1.9.15 Release</h4>
           <p id="updateNotesText">Instant search, persistent account recovery via email, and in-app update engine.</p>
           <span class="update-changelog-link" id="btnViewChangelog">View on GitHub</span>
         </div>
@@ -833,14 +833,20 @@
             <line x1="4" y1="4" x2="9" y2="9"></line>
           </svg>
         </button>
-        <button class="transport-btn-skip touch-spring" id="btnSheetPrev" aria-label="Previous">
-          <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+        <button class="transport-btn-skip touch-spring" id="btnSheetPrev" aria-label="Previous" title="Previous">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
+          </svg>
         </button>
-        <button class="transport-btn-main touch-spring" id="btnSheetPlayPause" aria-label="Play or Pause">
-          <svg viewBox="0 0 24 24" id="iconSheetPlayPause"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>
+        <button class="transport-btn-main touch-spring" id="btnSheetPlayPause" aria-label="Play or Pause" title="Play or Pause">
+          <svg viewBox="0 0 24 24" id="iconSheetPlayPause" width="28" height="28" fill="currentColor">
+            <path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l11-6.86a1 1 0 0 0 0-1.68l-11-6.86A1 1 0 0 0 8 5.14z"/>
+          </svg>
         </button>
-        <button class="transport-btn-skip touch-spring" id="btnSheetNext" aria-label="Next">
-          <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        <button class="transport-btn-skip touch-spring" id="btnSheetNext" aria-label="Next" title="Next">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+          </svg>
         </button>
         <button class="np-lbtn touch-spring" id="btnToggleLyricsMode" title="Lyrics" aria-label="Toggle Lyrics" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -884,17 +890,37 @@
 
   <!-- UP NEXT / AUDIO QUEUE SHEET MODAL -->
   <div class="modal-backdrop" id="queueModal" style="z-index: 500;">
-    <div class="modal-card" style="max-height: 80vh; display:flex; flex-direction:column; width:100%; max-width:400px; padding:22px; background:rgba(18,18,26,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:24px; backdrop-filter:blur(30px); box-shadow:0 24px 60px rgba(0,0,0,0.8);">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <h3 class="modal-title" style="margin:0; font-size:18px; font-weight:700; color:#fff;">Playing Queue</h3>
-        <button id="btnClearQueue" style="background:rgba(230,57,70,0.15); border:1px solid rgba(230,57,70,0.3); color:var(--accent); font-size:12px; font-weight:600; padding:5px 12px; border-radius:999px; cursor:pointer;">Clear</button>
+    <div class="modal-card" style="max-height: 84vh; display:flex; flex-direction:column; width:100%; max-width:410px; padding:22px; background:rgba(18,18,26,0.96); border:1px solid rgba(255,255,255,0.16); border-radius:26px; backdrop-filter:blur(36px); box-shadow:0 30px 80px rgba(0,0,0,0.85);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h3 class="modal-title" style="margin:0; font-size:18px; font-weight:800; color:#fff;">Playing Queue</h3>
+        <button id="btnClearQueue" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:rgba(255,255,255,0.7); font-size:12px; font-weight:600; padding:5px 12px; border-radius:999px; cursor:pointer;">Clear</button>
       </div>
-      <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px;">Queued songs play next before returning to normal playlist.</p>
-      <div id="queueListContainer" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; min-height:80px; max-height:300px; padding-right:4px;">
-        <div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:13px;">Queue is empty. Use song menus to add tracks.</div>
+
+      <!-- Currently Playing Track Card (On Top) -->
+      <div class="queue-now-playing" id="queueNowPlayingSection" style="display:flex; align-items:center; gap:12px; padding:12px 14px; background:linear-gradient(135deg, rgba(255,66,87,0.15) 0%, rgba(254,105,47,0.1) 100%); border:1px solid rgba(255,66,87,0.3); border-radius:18px; margin-bottom:14px;">
+        <img id="queueNowPlayingCover" src="" alt="Cover" style="width:46px; height:46px; border-radius:12px; object-fit:cover; flex-shrink:0; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+        <div style="flex:1; overflow:hidden;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent);">NOW PLAYING</span>
+          </div>
+          <div id="queueNowPlayingTitle" style="font-size:14px; font-weight:700; color:#ffffff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">Track Title</div>
+          <div id="queueNowPlayingArtist" style="font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Artist</div>
+        </div>
+        <div style="width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); flex-shrink:0;"></div>
       </div>
-      <div class="modal-actions" style="margin-top:16px;">
-        <button class="btn-modal-secondary" id="btnCloseQueueModal" style="width:100%; padding:12px; border-radius:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; font-weight:600; cursor:pointer;">Close</button>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted);">Up Next &amp; Suggested</span>
+        <span id="queueCountLabel" style="font-size:11px; color:rgba(255,255,255,0.5); font-weight:600;">5 tracks</span>
+      </div>
+
+      <!-- Queue & Suggested Song List -->
+      <div id="queueListContainer" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; min-height:120px; max-height:340px; padding-right:4px;">
+        <!-- Rendered dynamically by updateQueueUI -->
+      </div>
+
+      <div class="modal-actions" style="margin-top:14px;">
+        <button class="btn-modal-secondary touch-spring" id="btnCloseQueueModal" style="width:100%; padding:12px; border-radius:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; font-weight:600; cursor:pointer;">Close</button>
       </div>
     </div>
   </div>
@@ -1163,7 +1189,7 @@
           <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700;">Past 7 Days</span>
           <h2 id="metricWeekMins" style="margin:6px 0 0; font-size:24px; font-weight:800; color:var(--accent-cyan);">0m</h2>
         </div>
-      </div>
+      </div> AND OP
 
       <!-- Tabs: Top Artists vs History -->
       <div style="display:flex; gap:8px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">

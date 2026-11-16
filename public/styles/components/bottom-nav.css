@@ -16,7 +16,10 @@
   will-change: transform, opacity;
 }
 
-.nav-island-wrapper.nav-hidden {
+.nav-island-wrapper.nav-hidden,
+html.keyboard-visible .nav-island-wrapper,
+body:has(input:focus) .nav-island-wrapper,
+body:has(textarea:focus) .nav-island-wrapper {
   transform: translate(-50%, calc(100% + 40px)) !important;
   opacity: 0 !important;
   pointer-events: none !important;
