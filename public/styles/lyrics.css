@@ -75,70 +75,123 @@
   }
 }
 
-/* compact header: grabber, 50px cover, title / artist, round glass buttons (heart, queue) */
+/* Compact lyrics mode header: grabber, mini cover art, title & artist, star & more */
 .lv-head {
   position: relative;
   display: flex;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top), 12px) 24px 6px;
+  flex-shrink: 0;
+}
+
+.lv-grabber {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  margin: 4px auto 10px;
+  cursor: pointer;
+}
+
+.lv-meta-bar {
+  display: flex;
   align-items: center;
   gap: 12px;
-  padding: calc(22px + env(safe-area-inset-top)) 22px 10px;
+  width: 100%;
 }
-.lv-head::before {
-  content: '';
-  position: absolute;
-  top: calc(9px + env(safe-area-inset-top));
-  left: 50%;
-  width: 36px;
-  height: 4px;
-  margin-left: -18px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.35);
-}
+
 .lv-thumb {
   flex: none;
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  background: var(--cover) center / cover;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--cover) center / cover no-repeat;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  background-color: #1a1a24;
 }
-.lv-meta {
-  display: grid;
+
+.lv-meta-text {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   flex: 1;
 }
-.lv-meta b {
+
+.lv-meta-text b {
   font-size: 16px;
   font-weight: 700;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.2px;
 }
-.lv-meta small {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.62);
+
+.lv-meta-text small {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 2px;
 }
+
 .lv-act {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
-.lv-act button {
-  width: 40px;
-  height: 40px;
+
+.lv-scroll-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.lv-floating-tools {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.lv-floating-circle {
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  border: none;
   display: grid;
   place-items: center;
-  background: var(--mu-glass);
-  color: #fff;
+  color: #ffffff;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
+
+.lv-floating-circle:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.28);
+}
+
 .lv-cap {
-  padding: 8px 22px 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  text-decoration: underline;
+  padding: 6px 24px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: left;
+  margin: 0;
 }
 .lv-cap a {
   color: inherit;

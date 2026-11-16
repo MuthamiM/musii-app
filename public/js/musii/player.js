@@ -264,9 +264,7 @@
         return;
       }
       ev.emit('error', e);
-      const n = idxNext(true);
-      if (n >= 0 && n !== pos) go(n, { auto: true });
-      else stop(false);
+      stop(false);
     }
     const onError = (a) => fail(a.error || new Error('media error'), tries);
 

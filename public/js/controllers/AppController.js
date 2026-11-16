@@ -276,7 +276,7 @@ class AppController {
 
   bindAudioEvents() {
     const PLAY_SVG = '<path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l11-6.86a1 1 0 0 0 0-1.68l-11-6.86A1 1 0 0 0 8 5.14z"></path>';
-    const PAUSE_SVG = '<rect x="6" y="4" width="4" height="16" rx="2"></rect><rect x="14" y="4" width="4" height="16" rx="2"></rect>';
+    const PAUSE_SVG = '<rect x="5" y="4" width="4.5" height="16" rx="2.25"></rect><rect x="14.5" y="4" width="4.5" height="16" rx="2.25"></rect>';
 
     audioController.subscribe(({ track, isPlaying, isBuffering }) => {
       const miniName = document.getElementById('miniTrackName');
@@ -304,7 +304,12 @@ class AppController {
       if (sheetIcon) sheetIcon.innerHTML = isPlaying ? PAUSE_SVG : PLAY_SVG;
 
       const sheetPlayer = document.getElementById('fullscreenPlayerSheet');
-      if (sheetPlayer) sheetPlayer.classList.toggle('is-playing', isPlaying);
+      if (sheetPlayer) {
+        sheetPlayer.classList.toggle('is-playing', isPlaying);
+        if (track.cover_art) {
+          sheetPlayer.style.setProperty('--cover', `url("${track.cover_art}")`);
+        }
+      }
 
       const orb = document.getElementById('ambientBackdropOrb');
       if (orb) {
@@ -317,11 +322,22 @@ class AppController {
       if (sheetTitle) sheetTitle.textContent = track.title;
       if (sheetArtist) sheetArtist.textContent = track.artist;
 
+      const sheetContextName = document.getElementById('sheetContextName');
+      if (sheetContextName) sheetContextName.textContent = track.album || track.title;
+
       const sheetImg = document.getElementById('sheetCoverImg');
       if (sheetImg && track.cover_art) sheetImg.src = track.cover_art;
 
       const sheetTotal = document.getElementById('sheetTotalTime');
-      if (sheetTotal) sheetTotal.textContent = audioController.formatTime(track.duration);
+      if (sheetTotal && track.duration) {
+        sheetTotal.textContent = '-' + audioController.formatTime(track.duration);
+      }
+
+      const favBtn = document.getElementById('btnSheetFavorite');
+      const lvHeartBtn = document.getElementById('btnLvHeart');
+      const isFav = playlistController.isFavorite(track);
+      if (favBtn) favBtn.classList.toggle('is-favorite', isFav);
+      if (lvHeartBtn) lvHeartBtn.classList.toggle('is-favorite', isFav);
 
       // Update active state in horizontal recently played cards
       document.querySelectorAll('.recent-card-item').forEach((card, idx) => {
@@ -344,9 +360,14 @@ class AppController {
 
       const scrubberFill = document.getElementById('sheetScrubberFill');
       const curTimeLabel = document.getElementById('sheetCurrentTime');
+      const totTimeLabel = document.getElementById('sheetTotalTime');
 
       if (scrubberFill) scrubberFill.style.width = pct + '%';
       if (curTimeLabel) curTimeLabel.textContent = timeFormatted;
+      if (totTimeLabel && duration) {
+        const remaining = Math.max(0, duration - (currentTime || 0));
+        totTimeLabel.textContent = '-' + audioController.formatTime(remaining);
+      }
 
       // Update lyrics overlay footer scrubber
       const lyricsFooterFill = document.getElementById('lyricsFooterProgressFill');
@@ -855,15 +876,88 @@ class AppController {
       });
     }
 
+    const handleFav = () => {
+      const cur = audioController.getCurrentTrack();
+      if (!cur) return;
+      haptics.trigger('medium');
+      const isFav = playlistController.isFavorite(cur);
+      playlistController.toggleFavorite(cur);
+      const nowFav = !isFav;
+      const favBtn = document.getElementById('btnSheetFavorite');
+      const lvHeart = document.getElementById('btnLvHeart');
+      if (favBtn) favBtn.classList.toggle('is-favorite', nowFav);
+      if (lvHeart) lvHeart.classList.toggle('is-favorite', nowFav);
+      errorHandler.showToast(nowFav ? 'Added to Favorites' : 'Removed from Favorites');
+    };
+
     const btnFav = document.getElementById('btnSheetFavorite');
-    if (btnFav) {
-      btnFav.addEventListener('click', () => {
-        haptics.trigger('heavy');
-        const isFav = btnFav.style.color === 'rgb(255, 71, 103)';
-        btnFav.style.color = isFav ? '#ffffff' : 'var(--accent)';
-        btnFav.style.fill = isFav ? 'none' : 'currentColor';
-        errorHandler.showToast(isFav ? 'Removed from Liked Songs' : 'Added to Liked Songs');
+    if (btnFav) btnFav.addEventListener('click', handleFav);
+    const btnLvHeart = document.getElementById('btnLvHeart');
+    if (btnLvHeart) btnLvHeart.addEventListener('click', handleFav);
+
+    const btnDevice = document.getElementById('btnSheetDevice');
+    if (btnDevice) {
+      btnDevice.addEventListener('click', () => {
+        haptics.trigger('light');
+        errorHandler.showToast('Audio Output: Phone Speaker (WS-305 ready)');
       });
+    }
+
+    const openTrackMenu = (e) => {
+      e.stopPropagation();
+      haptics.trigger('medium');
+      const cur = audioController.getCurrentTrack();
+      if (cur) playlistController.openTrackContextMenu(cur, e.clientX || window.innerWidth / 2, e.clientY || window.innerHeight / 2);
+    };
+    const btnMore = document.getElementById('btnSheetMore');
+    if (btnMore) btnMore.addEventListener('click', openTrackMenu);
+    const btnLvMore = document.getElementById('btnLvMore');
+    if (btnLvMore) btnLvMore.addEventListener('click', openTrackMenu);
+
+    const vocalPill = document.getElementById('sheetVocalPill');
+    if (vocalPill) {
+      vocalPill.addEventListener('click', () => {
+        haptics.trigger('light');
+        errorHandler.showToast('Now playing: Lossless Studio Master');
+      });
+    }
+
+    const sheetGrabber = document.getElementById('sheetGrabber');
+    if (sheetGrabber) {
+      sheetGrabber.addEventListener('click', () => {
+        haptics.trigger('light');
+        modalController.closePlayerSheet();
+      });
+    }
+    const sheetGrabberLyrics = document.getElementById('sheetGrabberLyrics');
+    if (sheetGrabberLyrics) {
+      sheetGrabberLyrics.addEventListener('click', () => {
+        haptics.trigger('light');
+        modalController.closePlayerSheet();
+      });
+    }
+
+    const btnQueue = document.getElementById('btnSheetQueue');
+    if (btnQueue) {
+      btnQueue.addEventListener('click', () => {
+        haptics.trigger('medium');
+        modalController.openQueueModal();
+      });
+    }
+
+    const volTrack = document.getElementById('sheetVolumeTrack');
+    const volFill = document.getElementById('sheetVolumeFill');
+    if (volTrack) {
+      const updateVol = (e) => {
+        const rect = volTrack.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        if (volFill) volFill.style.width = (ratio * 100) + '%';
+        if (audioController.audio) audioController.audio.volume = ratio;
+        if (audioController._audioB) audioController._audioB.volume = ratio;
+      };
+      volTrack.addEventListener('click', updateVol);
+      volTrack.addEventListener('touchmove', updateVol, { passive: true });
     }
 
     const toggleHapticsBtn = document.getElementById('btnToggleHaptics');

@@ -327,6 +327,28 @@ class AudioController {
     this.notify();
   }
 
+  onRemotePlay() {
+    this.isPlaying = true;
+    this.updateMediaSession(this.getCurrentTrack());
+    this.notify();
+  }
+
+  onRemotePause() {
+    this.isPlaying = false;
+    this.updateMediaSession(this.getCurrentTrack());
+    this.notify();
+  }
+
+  onNativeError() {
+    console.warn('[AudioController] Native playback error');
+    this.isPlaying = false;
+    this.isBuffering = false;
+    this.notify();
+    window.dispatchEvent(new CustomEvent('musii:toast', {
+      detail: { message: 'Stream connection interrupted. Tap play to retry.' }
+    }));
+  }
+
   togglePlay() {
     haptics.trigger('medium');
     if (this.isPlaying) {

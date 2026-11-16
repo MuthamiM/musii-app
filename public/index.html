@@ -233,7 +233,7 @@
         </button>
         <button class="touch-spring" id="btnProfileUpdateOption" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Software Update</span>
-          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.15 Latest</span>
+          <span id="tagProfileUpdateStatus" style="font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(16,185,129,0.18); color:#10b981; font-weight:600;">v1.9.16 Latest</span>
         </button>
         <button class="touch-spring" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 18px; text-align:left; border-bottom:1px solid var(--line);">
           <span>Streaming Edge Mesh</span>
@@ -716,7 +716,7 @@
     <div class="update-dialog">
       <div class="update-dialog-header">
         <h3>Software Update</h3>
-        <p id="updateModalSubtitle">MUSII v1.9.15 is available to download.</p>
+        <p id="updateModalSubtitle">MUSII v1.9.16 is available to download.</p>
       </div>
 
       <div class="update-whats-new">
@@ -746,7 +746,7 @@
         </div>
 
         <div class="update-meta-block">
-          <h4 id="updateVersionBadge">v1.9.15 Release</h4>
+          <h4 id="updateVersionBadge">v1.9.16 Release</h4>
           <p id="updateNotesText">Instant search, persistent account recovery via email, and in-app update engine.</p>
           <span class="update-changelog-link" id="btnViewChangelog">View on GitHub</span>
         </div>
@@ -759,103 +759,135 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN GLASS PLAYER SHEET (BitChord Now Playing Specification) -->
+  <!-- FULLSCREEN GLASS PLAYER SHEET (Pixel Perfect Apple Music Specification) -->
   <section class="fullscreen-player-sheet np" id="fullscreenPlayerSheet" data-mode="art" style="--cover:url('https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg');">
     <div class="np-bg"></div>
     <div class="np-shade"></div>
 
+    <!-- PULL GRABBER & CONTEXT TITLE (Screenshot 1 & 2) -->
     <header class="np-top sheet-top-bar">
-      <button class="sheet-icon-btn touch-spring" id="btnClosePlayerSheet" aria-label="Close Player">
-        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
-      </button>
-      <span style="font-size:13px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted)">Now Playing</span>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <button class="sheet-icon-btn touch-spring" id="btnSheetDownload" title="Download Song" aria-label="Download Song">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        </button>
-        <button class="sheet-icon-btn touch-spring" id="btnSheetQueue" title="Playback Queue" aria-label="Playback Queue" style="position:relative;">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-          <span id="badgeQueueCount" style="display:none; position:absolute; top:-2px; right:-2px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; line-height:16px; text-align:center;">0</span>
-        </button>
-        <button class="sheet-icon-btn touch-spring" id="btnSheetFavorite" aria-label="Favorite">
-          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-        </button>
-      </div>
+      <div class="np-grabber" id="sheetGrabber" title="Swipe or tap to close"></div>
+      <div class="np-context-title" id="sheetContextTitle">Playing from <span id="sheetContextName">Walking On A Dream</span></div>
     </header>
 
+    <!-- ARTWORK VIEW (Screenshot 1) -->
     <div class="np-art">
       <div class="sheet-cover-container" id="sheetCoverArt">
         <img id="sheetCoverImg" src="https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg" alt="Cover Art" class="sheet-cover-img">
       </div>
-      <div class="sheet-meta-info">
-        <h1 class="sheet-title" id="sheetTrackTitle">Make No Sense</h1>
-        <p class="sheet-artist" id="sheetTrackArtist">YoungBoy Never Broke Again</p>
+      <div class="sheet-quality-badge" id="sheetQualityBadge">Opus · 48.0 kHz · 135 kbps · Stereo</div>
+      
+      <div class="sheet-track-row">
+        <div class="sheet-meta-info">
+          <h1 class="sheet-title" id="sheetTrackTitle">Walking On A Dream</h1>
+          <p class="sheet-artist" id="sheetTrackArtist">Empire Of The Sun</p>
+        </div>
+        <div class="sheet-meta-actions">
+          <button class="sheet-glass-circle-btn touch-spring" id="btnSheetFavorite" aria-label="Favorite" title="Favorite">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button class="sheet-glass-circle-btn touch-spring" id="btnSheetMore" aria-label="More Options" title="More Options">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2.2"></circle><circle cx="12" cy="12" r="2.2"></circle><circle cx="19" cy="12" r="2.2"></circle></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sheet-vocal-pill" id="sheetVocalPill">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        <span>Instrumental</span>
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
       </div>
       <div id="lp"></div>
     </div>
 
+    <!-- LYRICS VIEW (Screenshot 2) -->
     <div class="np-lyr">
       <div class="lv-head">
-        <button class="sheet-icon-btn touch-spring" id="btnLvBack" aria-label="Back to Album Art" title="Back to Album Art" style="width:38px; height:38px; flex:none; margin-right:4px;">
-          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-        <span class="lv-thumb" id="lvThumb"></span>
-        <span class="lv-meta"><b id="lvTitle">Make No Sense</b><small id="lvArtist">YoungBoy Never Broke Again</small></span>
-        <span class="lv-act">
-          <button class="touch-spring" id="btnLvHeart" aria-label="Favorite"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
-          <button class="touch-spring" id="btnLvQueue" aria-label="Queue"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
-        </span>
+        <div class="np-grabber lv-grabber"></div>
+        <div class="lv-meta-bar">
+          <span class="lv-thumb" id="lvThumb"></span>
+          <div class="lv-meta-text">
+            <b id="lvTitle">Walking On A Dream</b>
+            <small id="lvArtist">Empire Of The Sun</small>
+          </div>
+          <div class="lv-act">
+            <button class="sheet-glass-circle-btn touch-spring" id="btnLvHeart" aria-label="Favorite">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </button>
+            <button class="sheet-glass-circle-btn touch-spring" id="btnLvMore" aria-label="More Options">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="12" r="2.2"></circle><circle cx="12" cy="12" r="2.2"></circle><circle cx="19" cy="12" r="2.2"></circle></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div id="ly"></div>
-      <p class="lv-cap">Lyrics: <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a><span id="cap-x"></span></p>
+      <div class="lv-scroll-container">
+        <div id="ly"></div>
+        <div class="lv-floating-tools">
+          <button class="lv-floating-circle touch-spring" id="btnLyricsGlobe" title="Original" aria-label="Original Language">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </button>
+          <button class="lv-floating-circle touch-spring" id="btnLyricsTranslate" title="Translate" aria-label="Translate">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 6 0M8 5v6M5 14a8 8 0 0 0 6 3m-2-5 4 7m2-7 4 7m-1-2H13"></path></svg>
+          </button>
+        </div>
+        <p class="lv-cap">Lyrics by <span id="lyricsSourceLabel">lrc.red</span><span id="cap-x"></span></p>
+      </div>
     </div>
 
+    <!-- SHARED BOTTOM CONTROLS (Screenshots 1 & 2) -->
     <div class="np-ctl">
+      <!-- SCRUBBER & DUAL TIMESTAMPS -->
       <div class="scrubber-container np-seek">
         <div class="scrubber-track" id="sheetScrubberTrack">
-          <div class="scrubber-fill" id="sheetScrubberFill">
-            <div class="scrubber-thumb"></div>
-          </div>
+          <div class="scrubber-fill" id="sheetScrubberFill"></div>
         </div>
       </div>
       <div class="scrubber-timestamps np-times">
         <span id="sheetCurrentTime">0:00</span>
-        <span id="sheetTotalTime">3:34</span>
+        <span id="sheetTotalTime">-0:00</span>
       </div>
 
-      <div class="transport-controls">
-        <button class="sheet-icon-btn touch-spring" id="btnSheetShuffle" title="Shuffle" style="color:var(--text-muted); width:44px; height:44px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 3 21 3 21 8"></polyline>
-            <line x1="4" y1="20" x2="21" y2="3"></line>
-            <polyline points="21 16 21 21 16 21"></polyline>
-            <line x1="15" y1="15" x2="21" y2="21"></line>
-            <line x1="4" y1="4" x2="9" y2="9"></line>
+      <!-- APPLE MUSIC CLEAN SOLID TRANSPORT CONTROLS -->
+      <div class="apple-transport-row">
+        <button class="apple-transport-btn touch-spring" id="btnSheetPrev" aria-label="Previous" title="Previous">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="#ffffff">
+            <path d="M11 5L1 12l10 7V5zm11 0l-10 7 10 7V5z"/>
           </svg>
         </button>
-        <button class="transport-btn-skip touch-spring" id="btnSheetPrev" aria-label="Previous" title="Previous">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-            <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
-          </svg>
-        </button>
-        <button class="transport-btn-main touch-spring" id="btnSheetPlayPause" aria-label="Play or Pause" title="Play or Pause">
-          <svg viewBox="0 0 24 24" id="iconSheetPlayPause" width="28" height="28" fill="currentColor">
+        <button class="apple-transport-btn-play touch-spring" id="btnSheetPlayPause" aria-label="Play or Pause" title="Play or Pause">
+          <svg viewBox="0 0 24 24" id="iconSheetPlayPause" width="44" height="44" fill="#ffffff">
             <path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l11-6.86a1 1 0 0 0 0-1.68l-11-6.86A1 1 0 0 0 8 5.14z"/>
           </svg>
         </button>
-        <button class="transport-btn-skip touch-spring" id="btnSheetNext" aria-label="Next" title="Next">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-            <path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
-          </svg>
-        </button>
-        <button class="np-lbtn touch-spring" id="btnToggleLyricsMode" title="Lyrics" aria-label="Toggle Lyrics" aria-pressed="false">
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="22"></line>
+        <button class="apple-transport-btn touch-spring" id="btnSheetNext" aria-label="Next" title="Next">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="#ffffff">
+            <path d="M2 5l10 7-10 7V5zm11 0l10 7-10 7V5z"/>
           </svg>
         </button>
       </div>
+
+      <!-- VOLUME SLIDER ROW -->
+      <div class="apple-volume-row">
+        <svg class="vol-icon" viewBox="0 0 24 24" width="16" height="16" fill="rgba(255,255,255,0.6)"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>
+        <div class="volume-slider-track" id="sheetVolumeTrack">
+          <div class="volume-slider-fill" id="sheetVolumeFill" style="width: 75%;"></div>
+        </div>
+        <svg class="vol-icon" viewBox="0 0 24 24" width="16" height="16" fill="rgba(255,255,255,0.6)"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none"/></svg>
+      </div>
+
+      <!-- BOTTOM ACTION BAR: LYRICS, AUDIO OUTPUT, QUEUE -->
+      <div class="apple-bottom-action-row">
+        <button class="apple-bottom-btn touch-spring" id="btnToggleLyricsMode" title="Lyrics" aria-label="Toggle Lyrics">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 9h.01M12 9h.01M16 9h.01" stroke-width="3"></path></svg>
+        </button>
+        <button class="apple-bottom-btn touch-spring" id="btnSheetDevice" title="Audio Device" aria-label="Audio Output">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+        </button>
+        <button class="apple-bottom-btn touch-spring" id="btnSheetQueue" title="Queue" aria-label="Queue">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="apple-device-label" id="appleDeviceLabel">WS-305</div>
     </div>
   </section>
 

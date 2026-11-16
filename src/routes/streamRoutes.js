@@ -46,7 +46,8 @@ router.get('/play', async (req, res, next) => {
         return;
       }
       const client = url.startsWith('https') ? https : http;
-      const proxyReq = client.get(url, { headers: requestHeaders }, (proxyRes) => {
+      const method = req.method === 'HEAD' ? 'HEAD' : 'GET';
+      const proxyReq = client.request(url, { method, headers: requestHeaders }, (proxyRes) => {
         // Follow redirects on the server side -- never pass IP-bound URLs to the client
         if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
           proxyRes.resume(); // drain the response body
@@ -54,7 +55,7 @@ router.get('/play', async (req, res, next) => {
         }
 
         res.status(proxyRes.statusCode);
-        res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'audio/webm');
+        res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'audio/mp4');
         res.setHeader('Accept-Ranges', 'bytes');
         res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -63,6 +64,11 @@ router.get('/play', async (req, res, next) => {
         }
         if (proxyRes.headers['content-length']) {
           res.setHeader('Content-Length', proxyRes.headers['content-length']);
+        }
+
+        if (req.method === 'HEAD') {
+          proxyRes.resume();
+          return res.end();
         }
 
         proxyRes.pipe(res);
@@ -74,6 +80,8 @@ router.get('/play', async (req, res, next) => {
           res.status(502).send('Stream proxy error');
         }
       });
+
+      proxyReq.end();
 
       req.on('close', () => {
         proxyReq.destroy();

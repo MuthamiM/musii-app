@@ -17,6 +17,16 @@ class ModalController {
       btnCloseSheet.addEventListener('click', () => this.closePlayerSheet());
     }
 
+    const sheetGrabber = document.getElementById('sheetGrabber');
+    if (sheetGrabber) {
+      sheetGrabber.addEventListener('click', () => this.closePlayerSheet());
+    }
+
+    const sheetGrabberLyrics = document.getElementById('sheetGrabberLyrics');
+    if (sheetGrabberLyrics) {
+      sheetGrabberLyrics.addEventListener('click', () => this.closePlayerSheet());
+    }
+
     const btnCloseQueue = document.getElementById('btnCloseQueueModal');
     if (btnCloseQueue) {
       btnCloseQueue.addEventListener('click', () => this.closeQueueModal());

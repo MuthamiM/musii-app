@@ -1,76 +1,110 @@
 /**
- * Fullscreen Glass Player Sheet (With Live Lyrics & Visualizer)
+ * Fullscreen Glass Player Sheet (Apple Music Android Spec - Pixel Perfect)
  */
 .fullscreen-player-sheet {
   position: fixed;
   inset: 0;
-  background: rgba(8, 8, 12, 0.95);
-  -webkit-backdrop-filter: blur(40px) saturate(190%);
-  backdrop-filter: blur(40px) saturate(190%);
+  background: #09090e;
   z-index: 300;
   display: flex;
   flex-direction: column;
   padding: 0;
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.fullscreen-player-sheet .sheet-top-bar {
-  padding: max(env(safe-area-inset-top), 20px) 20px 0 20px;
-}
-
-.fullscreen-player-sheet .np-art {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-evenly;
-  padding: 0 20px;
-  min-height: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.fullscreen-player-sheet .np-ctl {
-  padding: 10px 20px max(env(safe-area-inset-bottom), 24px) 20px;
+  overflow: hidden;
 }
 
 .fullscreen-player-sheet.is-open {
   transform: translateY(0);
 }
 
-.sheet-top-bar {
+.fullscreen-player-sheet .np-bg {
+  position: absolute;
+  inset: -30px;
+  background: var(--cover) center / cover no-repeat;
+  filter: blur(55px) saturate(200%) brightness(0.65);
+  transform: scale(1.15);
+  opacity: 1 !important;
+  pointer-events: none;
+  z-index: 0;
+  transition: background-image 0.5s ease;
+}
+
+.fullscreen-player-sheet .np-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 12, 20, 0.45) 0%, rgba(5, 7, 12, 0.75) 60%, rgba(2, 4, 8, 0.95) 100%);
+  opacity: 1 !important;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Grabber handle and Header Context */
+.np-top.sheet-top-bar {
+  position: relative;
+  z-index: 2;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  padding: max(env(safe-area-inset-top), 14px) 24px 6px;
+  flex-shrink: 0;
 }
 
-.sheet-icon-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  display: grid;
-  place-items: center;
-  color: #ffffff;
-  transition: transform 0.14s ease;
+.np-grabber {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  margin: 4px auto 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.sheet-icon-btn:active {
-  transform: scale(0.9);
+.np-grabber:active {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scaleY(1.2);
+}
+
+.np-context-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.1px;
+}
+
+.np-context-title span {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+
+/* Now Playing Artwork View */
+.fullscreen-player-sheet .np-art {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0 24px;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sheet-cover-container {
-  width: min(70vw, 270px);
-  height: min(70vw, 270px);
+  width: min(78vw, 320px);
+  height: min(78vw, 320px);
   aspect-ratio: 1 / 1;
-  margin: 0 auto 12px;
-  border-radius: 26px;
+  margin: 0 auto;
+  border-radius: 14px;
   background: #14141e;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.65);
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -83,101 +117,264 @@
   display: block;
 }
 
-.sheet-meta-info {
+.sheet-quality-badge {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.02em;
+  margin-top: 14px;
+  margin-bottom: 6px;
   text-align: center;
-  margin-bottom: 10px;
-  width: 100%;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-#lp, .lp {
+.sheet-track-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  max-width: 380px;
-  box-sizing: border-box;
-  margin: 0 auto;
+  margin: 6px 0 10px;
+  gap: 12px;
+}
+
+.sheet-meta-info {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 
 .sheet-title {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 700;
-  letter-spacing: -0.4px;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+  margin: 0;
 }
 
 .sheet-artist {
   font-size: 15px;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-/* Lyrics Preview matching Coldplay lyrics in screenshot */
-.lyrics-glass-card {
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 14px 18px;
-  margin-bottom: 24px;
-  text-align: center;
-  backdrop-filter: blur(16px);
-}
-
-.lyrics-text {
-  font-size: 13.5px;
   font-weight: 500;
-  line-height: 1.5;
-  color: #fef08a;
-  letter-spacing: -0.2px;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 2px 0 0;
+  letter-spacing: -0.1px;
 }
 
-/* Scrubber / Progress */
+.sheet-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sheet-glass-circle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+}
+
+.sheet-glass-circle-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sheet-glass-circle-btn.is-favorite {
+  color: var(--accent);
+}
+
+.sheet-glass-circle-btn.is-favorite svg {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.sheet-vocal-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 8px;
+  align-self: flex-start;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sheet-vocal-pill:active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Shared Bottom Controls Block */
+.fullscreen-player-sheet .np-ctl {
+  position: relative;
+  z-index: 2;
+  padding: 8px 24px max(env(safe-area-inset-bottom), 20px) 24px;
+  flex-shrink: 0;
+}
+
+/* Scrubber / Progress Bar */
 .scrubber-container {
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: 6px;
 }
 
 .scrubber-track {
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.12);
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
   position: relative;
   cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.scrubber-track:active {
+  height: 6px;
 }
 
 .scrubber-fill {
   height: 100%;
-  border-radius: 3px;
-  background: var(--grad-fire);
-  width: 30%;
-  position: relative;
-}
-
-.scrubber-thumb {
-  position: absolute;
-  right: -6px;
-  top: -4px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  border-radius: 2px;
   background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  position: relative;
+  width: 0%;
+  transition: width 0.1s linear;
 }
 
 .scrubber-timestamps {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Transport playback controls */
-.transport-controls {
+/* Apple Music Transport Controls (Pure Solid White Geometry) */
+.apple-transport-row {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  margin-top: auto;
-  padding: 8px 0;
   width: 100%;
+  margin: 18px 0 16px;
+}
+
+.apple-transport-btn {
+  width: 52px;
+  height: 52px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s;
+}
+
+.apple-transport-btn:active {
+  transform: scale(0.88);
+  opacity: 0.75;
+}
+
+.apple-transport-btn-play {
+  width: 64px;
+  height: 64px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.apple-transport-btn-play:active {
+  transform: scale(0.9);
+}
+
+/* Volume Slider Row */
+.apple-volume-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 4px 6px;
+  margin-bottom: 18px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.volume-slider-track {
+  flex: 1;
+  height: 3px;
+  border-radius: 1.5px;
+  background: rgba(255, 255, 255, 0.2);
+  position: relative;
+  cursor: pointer;
+}
+
+.volume-slider-fill {
+  height: 100%;
+  border-radius: 1.5px;
+  background: #ffffff;
+}
+
+/* Bottom Action Row: Lyrics, Audio Route, Queue */
+.apple-bottom-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.apple-bottom-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.apple-bottom-btn:active {
+  transform: scale(0.9);
+}
+
+.apple-bottom-btn.active,
+.np[data-mode='lyrics'] #btnToggleLyricsMode {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.apple-device-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin-top: 4px;
+}
 }
 
 .transport-btn-skip {

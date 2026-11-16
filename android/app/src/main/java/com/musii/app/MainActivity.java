@@ -27,10 +27,12 @@ public class MainActivity extends BridgeActivity {
             if (webView != null) {
                 webView.post(() -> {
                     String script;
-                    if ("play".equals(action)) {
-                        script = "if (window.audioController) window.audioController.play();";
-                    } else if ("pause".equals(action)) {
-                        script = "if (window.audioController) window.audioController.pause();";
+                    if ("remote_play".equals(action)) {
+                        script = "if (window.audioController) window.audioController.onRemotePlay();";
+                    } else if ("remote_pause".equals(action)) {
+                        script = "if (window.audioController) window.audioController.onRemotePause();";
+                    } else if ("media_error".equals(action)) {
+                        script = "if (window.audioController) window.audioController.onNativeError();";
                     } else if ("next".equals(action)) {
                         script = "if (window.audioController) window.audioController.next();";
                     } else if ("prev".equals(action)) {

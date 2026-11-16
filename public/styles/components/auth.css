@@ -1,16 +1,17 @@
-/* Glassmorphic Login Card - Purple Gradient Theme (Optimized for Android WebView) */
+/* Glassmorphic Login Card - Dark Obsidian Theme (Pixel Perfect to Mockup #3) */
 .auth-screen-overlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: #090611;
+  justify-content: flex-start;
+  background: #06050a;
   background-image:
-    radial-gradient(ellipse at 30% 30%, rgba(130, 60, 220, 0.28) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 70%, rgba(180, 50, 200, 0.2) 0%, transparent 60%);
-  padding: 24px;
+    radial-gradient(ellipse at 50% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 65%),
+    radial-gradient(ellipse at 50% 80%, rgba(30, 27, 75, 0.25) 0%, transparent 70%);
+  padding: 24px 20px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
@@ -29,25 +30,22 @@
   position: relative;
   width: 100%;
   max-width: 360px;
-  background: linear-gradient(
-    160deg,
-    #2c1550 0%,
-    #1d0d38 45%,
-    #120824 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 28px;
-  padding: 38px 26px 32px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: rgba(14, 12, 22, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 32px;
+  padding: 38px 24px 32px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   text-align: center;
   box-sizing: border-box;
-  margin: auto;
+  margin: auto 0;
+  backdrop-filter: blur(36px);
+  -webkit-backdrop-filter: blur(36px);
 }
 
 .auth-title {
-  font-size: 27px;
+  font-size: 26px;
   font-weight: 300;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: #ffffff;
   margin: 0 0 2px;
   line-height: 1.3;
@@ -79,42 +77,41 @@
 
 .auth-input-icon {
   position: absolute;
-  left: 15px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  color: rgba(255, 255, 255, 0.45);
+  color: #6b7280;
   pointer-events: none;
 }
 
 .auth-text-input {
   width: 100%;
-  padding: 15px 16px 15px 44px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 400;
+  padding: 14px 16px 14px 44px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #111827;
+  font-size: 14.5px;
+  font-weight: 500;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s, background 0.2s;
+  transition: box-shadow 0.2s ease;
 }
 
 .auth-text-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: #6b7280;
 }
 
 .auth-text-input:focus {
-  border-color: #a855f7;
-  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.6);
 }
 
 .auth-code-input {
   width: 100%;
   padding: 15px;
-  border-radius: 14px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.16);
   color: #c084fc;
@@ -136,37 +133,38 @@
 .auth-forgot-link {
   display: block;
   text-align: right;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
-  color: #c084fc;
-  margin: -4px 0 20px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 4px 10px 22px 0;
   cursor: pointer;
   background: none;
   border: none;
   padding: 4px 0;
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 .auth-forgot-link:hover,
 .auth-forgot-link:active {
-  color: #e9d5ff;
+  color: #ffffff;
   text-decoration: underline;
 }
 
-/* Primary action button - purple gradient */
+/* Primary action button - dark gradient pill */
 .auth-primary-btn {
   width: 100%;
   padding: 15px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #6b21a8 100%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #5b21b6 0%, #2e1065 100%);
+  border: 1px solid rgba(168, 85, 247, 0.4);
   color: #ffffff;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  border: none;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
-  transition: transform 0.15s, opacity 0.2s;
+  box-shadow: 0 8px 25px rgba(91, 33, 182, 0.45);
+  transition: transform 0.15s, box-shadow 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,6 +173,7 @@
 
 .auth-primary-btn:active {
   transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(91, 33, 182, 0.6);
 }
 
 .auth-primary-btn:disabled {
@@ -185,7 +184,7 @@
 /* Secondary / link buttons */
 .auth-secondary-btn {
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
   color: #c084fc;
   font-size: 12px;

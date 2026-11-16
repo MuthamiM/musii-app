@@ -136,7 +136,8 @@ public class MusiiMediaService extends Service {
             stopProgressTracker();
             updatePlaybackState();
             pushNotification();
-            return false;
+            MainActivity.dispatchMediaAction("media_error");
+            return true; // CRITICAL: return true so onCompletionListener is NOT called on error!
         });
     }
 
@@ -218,11 +219,13 @@ public class MusiiMediaService extends Service {
             @Override
             public void onPlay() {
                 resumePlayback();
+                MainActivity.dispatchMediaAction("remote_play");
             }
 
             @Override
             public void onPause() {
                 pausePlayback();
+                MainActivity.dispatchMediaAction("remote_pause");
             }
 
             @Override
@@ -403,7 +406,6 @@ public class MusiiMediaService extends Service {
         startProgressTracker();
         updatePlaybackState();
         pushNotification();
-        MainActivity.dispatchMediaAction("play");
     }
 
     private void pausePlayback() {
@@ -420,7 +422,6 @@ public class MusiiMediaService extends Service {
         releaseWakeLock();
         updatePlaybackState();
         pushNotification();
-        MainActivity.dispatchMediaAction("pause");
     }
 
     private void seekPlayback(long posMs) {

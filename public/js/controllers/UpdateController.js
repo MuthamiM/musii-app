@@ -2,7 +2,7 @@ import { haptics } from '../middleware/hapticMiddleware.js';
 import { errorHandler } from '../errors/clientErrorHandler.js';
 import { apiUrl } from '../constants/api.js';
 
-export const APP_VERSION = '1.9.15';
+export const APP_VERSION = '1.9.16';
 
 class UpdateController {
   constructor() {
