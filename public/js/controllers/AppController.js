@@ -391,7 +391,10 @@ class AppController {
         lbtn.setAttribute('aria-pressed', String(mode === 'lyrics'));
       }
       if (overlayView) {
-        overlayView.poke();
+        requestAnimationFrame(() => {
+          overlayView.poke();
+          setTimeout(() => overlayView.poke(), 60);
+        });
       }
     }
 

@@ -5,6 +5,8 @@ class NavigationController {
     this.currentTab = 'home';
     this.tabs = ['home', 'playlist', 'profile', 'search'];
     this.indicator = null;
+    this.lastScrollY = 0;
+    this.scrollTicking = false;
   }
 
   init() {
@@ -18,11 +20,69 @@ class NavigationController {
         this.goTo(target, index);
       });
     });
+
+    this.bindScrollAutoHide();
+  }
+
+  bindScrollAutoHide() {
+    const navIsland = document.getElementById('navIslandWrapper');
+    const miniPlayer = document.getElementById('floatingMiniPlayer');
+    const scrollThreshold = 12;
+
+    const onScroll = () => {
+      if (!this.scrollTicking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+          // Always reveal bar when near the top
+          if (currentScrollY <= 40) {
+            if (navIsland) navIsland.classList.remove('nav-hidden');
+            if (miniPlayer) miniPlayer.classList.remove('mini-hidden');
+            this.lastScrollY = currentScrollY;
+            this.scrollTicking = false;
+            return;
+          }
+
+          const diff = currentScrollY - this.lastScrollY;
+          if (Math.abs(diff) > scrollThreshold) {
+            if (diff > 0) {
+              // Scrolling down: auto-hide bar
+              if (navIsland) navIsland.classList.add('nav-hidden');
+              if (miniPlayer) miniPlayer.classList.add('mini-hidden');
+            } else {
+              // Scrolling up: reveal bar
+              if (navIsland) navIsland.classList.remove('nav-hidden');
+              if (miniPlayer) miniPlayer.classList.remove('mini-hidden');
+            }
+            this.lastScrollY = currentScrollY;
+          }
+
+          this.scrollTicking = false;
+        });
+        this.scrollTicking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Show bars immediately if user touches near the bottom
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0] && e.touches[0].clientY > window.innerHeight - 120) {
+        if (navIsland) navIsland.classList.remove('nav-hidden');
+        if (miniPlayer) miniPlayer.classList.remove('mini-hidden');
+      }
+    }, { passive: true });
   }
 
   goTo(tabName, index = null) {
     if (!this.tabs.includes(tabName)) return;
     haptics.trigger('light');
+
+    // Reveal navigation bar and mini player when changing tabs
+    const navIsland = document.getElementById('navIslandWrapper');
+    const miniPlayer = document.getElementById('floatingMiniPlayer');
+    if (navIsland) navIsland.classList.remove('nav-hidden');
+    if (miniPlayer) miniPlayer.classList.remove('mini-hidden');
 
     this.currentTab = tabName;
     const btnQuickSearch = document.getElementById('btnQuickSearch');
@@ -60,4 +120,3 @@ class NavigationController {
 }
 
 export const navigationController = new NavigationController();
-
