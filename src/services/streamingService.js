@@ -71,10 +71,10 @@ class StreamingService {
       await this.acquireResolutionSlot();
       try {
         const target = cleanQuery.startsWith('http') ? cleanQuery : `ytsearch1:${cleanQuery} audio`;
-        const cmd = `${this.ytDlpPath} --js-runtimes "node:${process.execPath}" -f "140/ba/b" --no-playlist --no-warnings --no-check-certificates --geo-bypass --socket-timeout 10 --retries 2 -g "${target}"`;
+        const cmd = `${this.ytDlpPath} -f "140/ba/b" --no-playlist --no-warnings --no-check-certificates --geo-bypass --socket-timeout 15 --retries 3 -g "${target}"`;
 
         return await new Promise((resolve, reject) => {
-          exec(cmd, { timeout: 25000 }, (error, stdout) => {
+          exec(cmd, { timeout: 35000 }, (error, stdout) => {
             if (error) {
               console.error('[StreamingService] yt-dlp error:', error.message);
               return reject(new Error('Failed to resolve audio stream'));

@@ -79,7 +79,7 @@ body:has(textarea:focus) .nav-island-wrapper {
 }
 
 .nav-tab-btn.is-active svg {
-  color: var(--accent);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 

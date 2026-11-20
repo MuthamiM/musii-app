@@ -49,13 +49,10 @@
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.55) 100%);
 }
 .np[data-mode='lyrics'] .np-bg,
-.np[data-mode='lyrics'] .np-shade {
+.np[data-mode='lyrics'] .np-shade,
+.np[data-mode='queue'] .np-bg,
+.np[data-mode='queue'] .np-shade {
   opacity: 1;
-}
-.np[data-mode='art'] .np-lyr,
-.np[data-mode='lyrics'] .np-top,
-.np[data-mode='lyrics'] .np-art {
-  display: none;
 }
 .np-lyr {
   flex: 1;

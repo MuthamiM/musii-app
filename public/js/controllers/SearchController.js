@@ -36,7 +36,7 @@ class SearchController {
 
     if (profileBtn) {
       profileBtn.addEventListener('click', () => {
-        navigationController.goTo('profile');
+        navigationController.goTo('settings');
       });
     }
 

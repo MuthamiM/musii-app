@@ -125,6 +125,60 @@ class AuthController {
     if (btnSignOut) {
       btnSignOut.addEventListener('click', () => this.signOut());
     }
+
+    const tabPassword = document.getElementById('tabAuthPassword');
+    const tabCode = document.getElementById('tabAuthCode');
+    const passwordGroup = document.getElementById('authPasswordGroup');
+    const forgotLink = document.getElementById('btnAuthForgot');
+    const btnLabel = document.getElementById('btnAuthSendCodeLabel');
+
+    if (tabPassword && tabCode) {
+      tabPassword.addEventListener('click', () => {
+        haptics.trigger('light');
+        tabPassword.classList.add('is-active');
+        tabCode.classList.remove('is-active');
+        if (passwordGroup) passwordGroup.style.display = 'block';
+        if (forgotLink) forgotLink.style.display = 'block';
+        if (btnLabel) btnLabel.textContent = 'Sign In';
+      });
+
+      tabCode.addEventListener('click', () => {
+        haptics.trigger('light');
+        tabCode.classList.add('is-active');
+        tabPassword.classList.remove('is-active');
+        if (passwordGroup) passwordGroup.style.display = 'none';
+        if (forgotLink) forgotLink.style.display = 'none';
+        if (btnLabel) btnLabel.textContent = 'Send Magic Code';
+      });
+    }
+
+    const btnGuest = document.getElementById('btnAuthGuest');
+    if (btnGuest) {
+      btnGuest.addEventListener('click', () => this.continueAsGuest());
+    }
+  }
+
+  continueAsGuest() {
+    haptics.trigger('heavy');
+    const guestUser = {
+      id: 'guest_' + Date.now(),
+      name: 'BitChord Listener',
+      email: 'guest@bitchord.audio',
+      role: 'guest',
+      avatar: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ab/64/d1/ab64d11e-422b-e0d5-ec2f-a3d097c5ded8/075679832085.jpg/600x600bb.jpg'
+    };
+    this.token = 'guest_token_' + Date.now();
+    localStorage.setItem('musii_token', this.token);
+    localStorage.setItem('musii_user', JSON.stringify(guestUser));
+    this.updateProfileUI(guestUser);
+    this.hideAuth();
+    errorHandler.showToast('Welcome to BitChord!');
+    window.dispatchEvent(new CustomEvent('musii:user-updated', { detail: { user: guestUser } }));
+    setTimeout(() => {
+      if (!audioController.isPlaying) {
+        audioController.play();
+      }
+    }, 400);
   }
 
   showAuth() {

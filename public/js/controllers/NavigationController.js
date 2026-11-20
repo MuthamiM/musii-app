@@ -3,7 +3,9 @@ import { haptics } from '../middleware/hapticMiddleware.js';
 class NavigationController {
   constructor() {
     this.currentTab = 'home';
-    this.tabs = ['home', 'playlist', 'profile', 'search'];
+    this.previousTab = 'home';
+    this.tabs = ['home', 'explore', 'playlist', 'search', 'settings'];
+    this.bottomTabs = ['home', 'explore', 'playlist'];
     this.indicator = null;
     this.lastScrollY = 0;
     this.scrollTicking = false;
@@ -19,6 +21,21 @@ class NavigationController {
         const index = parseInt(btn.dataset.idx, 10);
         this.goTo(target, index);
       });
+    });
+
+    // Profile buttons across headers go to Settings
+    const profileBtns = [
+      document.getElementById('btnHeaderProfile'),
+      document.getElementById('btnLibraryProfile'),
+      document.getElementById('btnExploreProfile'),
+      document.getElementById('searchProfileBtn')
+    ];
+    profileBtns.forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', () => {
+          this.goTo('settings');
+        });
+      }
     });
 
     this.bindScrollAutoHide();
@@ -100,7 +117,7 @@ class NavigationController {
             if (diff > 0) {
               // Scrolling down: auto-hide bar
               if (navIsland) navIsland.classList.add('nav-hidden');
-              if (miniPlayer) miniPlayer.classList.add('mini-hidden');
+              if (miniPlayer) miniPlayer.classList.remove('mini-hidden');
             } else {
               // Scrolling up: reveal bar
               if (navIsland) navIsland.classList.remove('nav-hidden');
@@ -130,6 +147,10 @@ class NavigationController {
     if (!this.tabs.includes(tabName)) return;
     haptics.trigger('light');
 
+    if (this.currentTab !== 'settings' && this.currentTab !== 'search') {
+      this.previousTab = this.currentTab;
+    }
+
     // Reveal navigation bar and mini player when changing tabs
     const navIsland = document.getElementById('navIslandWrapper');
     const miniPlayer = document.getElementById('floatingMiniPlayer');
@@ -150,12 +171,24 @@ class NavigationController {
       document.querySelectorAll('.view-section').forEach(sec => {
         sec.classList.toggle('active', sec.id === 'view-search');
       });
+    } else if (tabName === 'settings') {
+      if (this.indicator) this.indicator.style.opacity = '0';
+      if (btnQuickSearch) btnQuickSearch.classList.remove('is-active');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.remove('is-active');
+      });
+
+      document.querySelectorAll('.view-section').forEach(sec => {
+        sec.classList.toggle('active', sec.id === 'view-settings');
+      });
     } else {
       if (btnQuickSearch) btnQuickSearch.classList.remove('is-active');
+      const bottomIdx = this.bottomTabs.indexOf(tabName);
       if (this.indicator) {
         this.indicator.style.opacity = '1';
-        if (index === null) index = this.tabs.indexOf(tabName);
-        this.indicator.style.transform = `translateX(${index * 100}%)`;
+        const finalIdx = index !== null ? index : (bottomIdx !== -1 ? bottomIdx : 0);
+        this.indicator.style.transform = `translateX(${finalIdx * 100}%)`;
       }
 
       document.querySelectorAll('.nav-tab-btn').forEach(btn => {
@@ -168,6 +201,14 @@ class NavigationController {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  switchTab(tabName, index = null) {
+    this.goTo(tabName, index);
+  }
+
+  goBack() {
+    this.goTo(this.previousTab || 'home');
   }
 }
 

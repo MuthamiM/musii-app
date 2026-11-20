@@ -126,10 +126,7 @@ class SettingsController {
 
   close() {
     haptics.trigger('light');
-    if (this.view) {
-      this.view.classList.remove('active');
-    }
-    navigationController.switchTab(this.previousTab || 'home');
+    navigationController.goTo(this.previousTab || 'home');
   }
 
   filterSettings(query) {

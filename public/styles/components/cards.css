@@ -314,3 +314,218 @@
   text-overflow: ellipsis;
 }
 
+/* --- LIBRARY VIEW SPEC (Screenshot 2 - Pixel Perfect) --- */
+.library-stats-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  margin-inline: -20px;
+  padding-inline: 20px;
+  margin-bottom: 24px;
+}
+
+.library-stats-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.library-stats-card {
+  flex: 0 0 82%;
+  max-width: 320px;
+  aspect-ratio: 16 / 10;
+  border-radius: 24px;
+  padding: 20px 22px;
+  background: linear-gradient(135deg, #400b1a 0%, #200810 60%, #15050b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.library-stats-card-bg-waves {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.stats-card-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stats-card-main-val {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  letter-spacing: -1px;
+  margin-top: 6px;
+}
+
+.stats-card-main-unit {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 4px;
+}
+
+.stats-card-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.stats-card-badge-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.stats-card-badge-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+}
+
+.stats-card-member-since {
+  text-align: right;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+}
+
+.stats-card-member-date {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+/* Library Navigation Rows (Downloads, Local Music, Cached songs) */
+.library-menu-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 28px;
+}
+
+.library-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: #ffffff;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.library-menu-row:active {
+  opacity: 0.7;
+}
+
+.library-menu-row-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.library-menu-row-left svg {
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+  stroke-width: 2.2;
+}
+
+.library-menu-row-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.library-menu-row-right svg {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.35);
+  stroke-width: 2.2;
+}
+
+/* On Device Grid */
+.on-device-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-bottom: 120px;
+}
+
+.on-device-card {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.on-device-card:active {
+  transform: scale(0.96);
+}
+
+.on-device-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #14141e;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.on-device-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.on-device-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.on-device-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+
